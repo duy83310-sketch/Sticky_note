@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sticky Note</title>
+  <link rel="stylesheet" href="../assets/fluent.css">
+  <style>
+    /* Note Layout Specifics */
+    #noteContainer {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      width: 100vw;
+      box-shadow: var(--shadow-note);
+      position: relative;
+    }
+
+    /* Note Header */
+    .note-header {
+      height: 38px;
+      padding: 0 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+      cursor: move;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+
+    /* Deadline Banner */
+    #deadlineBanner {
+      margin: 8px 12px 2px 12px;
+      padding: 6px 10px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: 1px solid;
+    }
+    #deadlineBanner:hover {
+      filter: brightness(0.96);
+    }
+
+    .dl-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 6px;
+    }
+
+    /* Note Content Area */
+    #contentScrollArea {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px 14px 12px 14px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #noteTitle {
+      font-size: 15px;
+      font-weight: 700;
+      line-height: 1.4;
+      padding-bottom: 6px;
+      margin-bottom: 8px;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+      width: 100%;
+    }
+
+    body.theme-charcoal #noteTitle {
+      border-bottom-color: rgba(255, 255, 255, 0.12);
+    }
+
+    /* Checklist Mode */
+    .checklist-container {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 4px;
+    }
+
+    .check-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 3px 0;
+      group: relative;
+    }
+
+    .check-box {
+      width: 16px;
+      height: 16px;
+      margin-top: 2px;
+      cursor: pointer;
+      accent-color: #2b2b2b;
+    }
+
+    .check-input {
+      flex: 1;
+      font-size: 13px;
+      line-height: 1.5;
+      word-break: break-word;
+      transition: all 0.15s;
+    }
+
+    .check-input.done {
+      text-decoration: line-through;
+      opacity: 0.6;
+    }
+
+    .btn-del-item {
+      opacity: 0;
+      font-size: 14px;
+      color: #999;
+      width: 20px;
+      height: 20px;
+    }
+    .check-item:hover .btn-del-item {
+      opacity: 1;
+    }
+    .btn-del-item:hover {
+      color: #e81123;
+    }
+
+    .btn-add-item {
+      align-self: flex-start;
+      margin-top: 6px;
+      font-size: 12px;
+      color: inherit;
+      opacity: 0.75;
+      padding: 4px 8px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .btn-add-item:hover {
+      opacity: 1;
+      background: rgba(0, 0, 0, 0.06);
+    }
+
+    /* Free Text Mode */
+    #noteEditor {
+      flex: 1;
+      font-size: 13.5px;
+      line-height: 1.6;
+      outline: none;
+      word-break: break-word;
+      min-height: 120px;
+    }
+    #noteEditor:empty:before {
+      content: attr(data-placeholder);
+      opacity: 0.45;
+      pointer-events: none;
+    }
+
+    /* Note Footer */
+    .note-footer {
+      height: 38px;
+      padding: 0 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+      font-size: 13px;
+    }
+
+    .format-tools {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+
+    .fmt-btn {
+      width: 26px;
+      height: 26px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .fmt-btn.active {
+      background: rgba(0, 0, 0, 0.15);
+    }
+
+    /* Popover Menus */
+    #menuFlyout {
+      top: 42px;
+      right: 10px;
+      width: 190px;
+      display: none;
+    }
+
+    #deadlineFlyout {
+      top: 42px;
+      left: 12px;
+      right: 12px;
+      display: none;
+    }
+
+    .color-palette {
+      display: flex;
+      gap: 6px;
+      padding: 4px 0 8px 0;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+      margin-bottom: 6px;
+    }
+    .color-swatch {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: transform 0.15s;
+    }
+    .color-swatch:hover {
+      transform: scale(1.15);
+    }
+    .color-swatch.active {
+      border-color: rgba(0, 0, 0, 0.6);
+    }
+
+    .menu-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 8px;
+      font-size: 12px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      width: 100%;
+      text-align: left;
+    }
+    .menu-item:hover {
+      background: rgba(0, 0, 0, 0.06);
+    }
+    .menu-item.danger {
+      color: #e81123;
+    }
+    .menu-item.danger:hover {
+      background: rgba(232, 17, 35, 0.1);
+    }
+
+    /* Lock Screen inside Note */
+    #lockScreen {
+      position: absolute;
+      inset: 38px 0 0 0;
+      background: inherit;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      text-align: center;
+      z-index: 50;
+    }
+  </style>
+</head>
+<body class="theme-yellow">
+  <div id="noteContainer">
+
+    <!-- Titlebar (Draggable) -->
+    <header class="note-header drag-region">
+      <div class="no-drag">
+        <button id="btnNewNote" class="btn-icon" title="Tạo ghi chú mới (+)">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3">
+            <line x1="12" y1="4" x2="12" y2="20"></line>
+            <line x1="4" y1="12" x2="20" y2="12"></line>
+          </svg>
+        </button>
+      </div>
+
+      <div class="header-actions no-drag">
+        <!-- Pin Toggle -->
+        <button id="btnPin" class="btn-icon" title="Ghim trên cùng">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M16 12V4H17V2H7V4H8V12L5 15V17H11V22L12 23L13 22V17H19V15L16 12Z"/>
+          </svg>
+        </button>
+
+        <!-- Menu / Color options -->
+        <button id="btnMenu" class="btn-icon" title="Tùy chọn & Màu sắc">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+            <circle cx="5" cy="12" r="2"></circle>
+            <circle cx="12" cy="12" r="2"></circle>
+            <circle cx="19" cy="12" r="2"></circle>
+          </svg>
+        </button>
+
+        <!-- Close window -->
+        <button id="btnClose" class="btn-icon btn-icon-close" title="Đóng ghi chú">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Smart Deadline Warning Banner -->
+    <div id="deadlineBanner" class="no-drag" style="display: none;">
+      <div style="display: flex; align-items: center;">
+        <span id="dlDot" class="dl-dot pulse-beacon"></span>
+        <span id="dlTitleText" style="font-weight: 500;">Hạn: <strong id="dlTimeText">17:30 hôm nay</strong></span>
+      </div>
+      <span id="dlBadgeText" class="deadline-badge">Còn 2 giờ</span>
+    </div>
+
+    <!-- Scrollable Content Area -->
+    <main id="contentScrollArea">
+      <input id="noteTitle" type="text" placeholder="Tiêu đề ghi chú…" maxlength="120" spellcheck="false" class="no-drag">
+
+      <!-- Checklist View -->
+      <div id="checklistView" class="checklist-container no-drag">
+        <!-- Dynamically rendered checklist items -->
+      </div>
+      <button id="btnAddCheckItem" class="btn-add-item no-drag" style="display: none;">
+        <span>+</span> Thêm mục công việc
+      </button>
+
+      <!-- Free Rich Text View -->
+      <div id="noteEditor" contenteditable="true" data-placeholder="Nhập nội dung ghi chú tại đây…" spellcheck="false" class="no-drag"></div>
+    </main>
+
+    <!-- Footer Toolbar -->
+    <footer class="note-footer no-drag">
+      <div class="format-tools">
+        <button id="fmtBold" class="fmt-btn" title="In đậm (Ctrl+B)">B</button>
+        <button id="fmtItalic" class="fmt-btn" style="font-style: italic; font-family: serif;" title="In nghiêng (Ctrl+I)">I</button>
+        <button id="fmtUnderline" class="fmt-btn" style="text-decoration: underline;" title="Gạch chân (Ctrl+U)">U</button>
+        <button id="fmtStrike" class="fmt-btn" style="text-decoration: line-through;" title="Gạch ngang">ab</button>
+        <button id="btnToggleChecklist" class="fmt-btn" title="Chuyển chế độ Checklist">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="9 11 12 14 22 4"></polyline>
+            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+          </svg>
+        </button>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 4px;">
+        <button id="btnOpenDeadline" class="btn-icon" title="Cài đặt Deadline">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+          </svg>
+        </button>
+      </div>
+    </footer>
+
+    <!-- Options Flyout Menu -->
+    <div id="menuFlyout" class="flyout-menu no-drag">
+      <div class="color-palette">
+        <div class="color-swatch" data-color="yellow" style="background:#fff785;" title="Vàng"></div>
+        <div class="color-swatch" data-color="pink"   style="background:#fde2e4;" title="Hồng"></div>
+        <div class="color-swatch" data-color="blue"   style="background:#d8f3fd;" title="Xanh dương"></div>
+        <div class="color-swatch" data-color="green"  style="background:#e2f9d2;" title="Xanh lá"></div>
+        <div class="color-swatch" data-color="purple" style="background:#ede4ff;" title="Tím"></div>
+        <div class="color-swatch" data-color="charcoal" style="background:#222326;" title="Đen"></div>
+      </div>
+      <button id="menuModeChecklist" class="menu-item">
+        <span>☑</span> Chuyển sang Checklist
+      </button>
+      <button id="menuLock" class="menu-item">
+        <span>🔒</span> Khóa bảo vệ bằng PIN
+      </button>
+      <button id="menuDelete" class="menu-item danger">
+        <span>🗑</span> Xóa ghi chú này
+      </button>
+    </div>
+
+    <!-- Deadline Setting Flyout -->
+    <div id="deadlineFlyout" class="flyout-menu no-drag">
+      <div style="font-size: 12px; font-weight: 600; margin-bottom: 8px;">⏰ Đặt hạn chót (Smart Deadline)</div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-bottom: 8px;">
+        <button id="quickDl2h" class="menu-item" style="justify-content: center; font-size: 11px; background: rgba(0,0,0,0.04);">+2 giờ</button>
+        <button id="quickDlToday" class="menu-item" style="justify-content: center; font-size: 11px; background: rgba(0,0,0,0.04);">17:30 Hôm nay</button>
+        <button id="quickDlTonight" class="menu-item" style="justify-content: center; font-size: 11px; background: rgba(0,0,0,0.04);">21:00 Tối nay</button>
+        <button id="quickDlTomorrow" class="menu-item" style="justify-content: center; font-size: 11px; background: rgba(0,0,0,0.04);">09:00 Ngày mai</button>
+      </div>
+      <input id="customDlInput" type="datetime-local" class="fluent-input" style="color:#000; background:rgba(0,0,0,0.05); margin-bottom: 8px;">
+      <div style="display: flex; gap: 6px;">
+        <button id="btnSaveDeadline" style="flex:1; background:#0078d4; color:#fff; padding:6px; font-size:12px; border-radius:4px; font-weight:600;">Lưu hạn chót</button>
+        <button id="btnClearDeadline" style="background:rgba(232,17,35,0.1); color:#e81123; padding:6px 10px; font-size:12px; border-radius:4px;">Xóa</button>
+      </div>
+    </div>
+
+    <!-- Locked Note Screen -->
+    <div id="lockScreen" class="no-drag">
+      <div style="font-size: 32px; margin-bottom: 12px;">🔒</div>
+      <h3 style="font-size: 14px; font-weight: 600; margin-bottom: 6px;">Ghi chú được khóa bảo vệ</h3>
+      <p style="font-size: 12px; opacity: 0.7; margin-bottom: 16px;">Vui lòng nhập mã PIN để mở khóa nội dung</p>
+      <input id="pinUnlockInput" type="password" maxlength="8" placeholder="Nhập PIN…" class="fluent-input" style="width: 140px; text-align: center; font-size: 14px; letter-spacing: 3px; color:#000; background:rgba(0,0,0,0.08); margin-bottom: 12px;">
+      <div id="unlockError" style="font-size: 11px; color: #e81123; margin-bottom: 8px; display: none;">Mã PIN không chính xác!</div>
+      <button id="btnSubmitUnlock" style="background:#0078d4; color:#fff; padding:6px 20px; font-size:12px; border-radius:4px; font-weight:600;">Mở khóa</button>
+    </div>
+
+  </div>
+
+  <script src="note.js"></script>
+</body>
+</html>

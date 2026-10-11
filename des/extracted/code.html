@@ -1,0 +1,369 @@
+<!DOCTYPE html><html lang="vi"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Windows Sticky Notes - Đồng bộ ghi chú &amp; Quản lý Deadline</title>
+<!-- Tailwind CSS v3 CDN -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            segoe: ['"Segoe UI"', '-apple-system', 'BlinkMacSystemFont', 'Inter', 'Roboto', 'sans-serif'],
+          },
+          colors: {
+            note: {
+              yellow: '#fff475',
+              yellowDark: '#fce83a',
+              pink: '#f28b82',
+              pinkLight: '#fbe4e8',
+              green: '#ccff90',
+              blue: '#cbf0f8',
+              purple: '#d7aefb',
+              charcoal: '#202124',
+            }
+          },
+          boxShadow: {
+            'win-window': '0 18px 45px rgba(0, 0, 0, 0.35), 0 2px 10px rgba(0, 0, 0, 0.2)',
+            'taskbar': '0 -2px 12px rgba(0, 0, 0, 0.35)',
+          }
+        }
+      }
+    }
+  </script>
+<!-- Styles for desktop layout and custom scrollbar -->
+<style data-purpose="custom-scrollbars">
+    .custom-scroll::-webkit-scrollbar {
+      width: 6px;
+    }
+    .custom-scroll::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: rgba(0, 0, 0, 0.18);
+      border-radius: 4px;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb:hover {
+      background: rgba(0, 0, 0, 0.35);
+    }
+  </style>
+<style data-purpose="window-effects">
+    .acrylic-glass {
+      backdrop-filter: blur(28px) saturate(180%);
+      -webkit-backdrop-filter: blur(28px) saturate(180%);
+    }
+    .taskbar-blur {
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+    }
+    .note-paper-shadow {
+      box-shadow: 0 16px 36px -8px rgba(0, 0, 0, 0.38), 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+  </style>
+</head>
+<body class="font-segoe select-none overflow-hidden m-0 p-0 h-screen w-screen bg-slate-900 text-slate-800">
+<!-- BEGIN: DesktopEnvironment -->
+<!-- Màn hình máy tính Windows với hình nền hoàng hôn cầu cảng mô phỏng như ảnh thực tế -->
+<div class="relative w-full h-full flex flex-col justify-between overflow-hidden bg-cover bg-center" style="background-image: radial-gradient(circle at 50% 25%, rgba(30, 41, 59, 0.45), rgba(15, 23, 42, 0.88)), linear-gradient(135deg, #1e1b4b 0%, #2e1065 40%, #0f172a 100%);">
+<!-- Tiêu đề nổi bật mờ trên Desktop (Đồng bộ ghi chú) -->
+<div class="absolute top-10 inset-x-0 text-center pointer-events-none z-0">
+<h1 class="text-3xl md:text-4xl font-light text-white/80 tracking-wide drop-shadow-md">
+        Sync notes across devices
+      </h1>
+<p class="text-xs md:text-sm text-white/50 mt-1 font-normal tracking-wider">
+        Windows Sticky Notes • Tự động đồng bộ và cảnh báo hạn chót
+      </p>
+</div>
+<!-- BEGIN: WorkspaceContainer -->
+<main class="relative flex-1 w-full p-4 sm:p-8 flex justify-center z-10 gap-6 lg:gap-10 items-start" style="padding-top: 5rem; padding-bottom: 2rem; max-height: calc(100vh - 48px); overflow: visible;">
+<!-- BEGIN: ActiveYellowStickyNote -->
+<!-- Ghi chú vàng kinh điển đang thao tác trực tiếp -->
+<section class="relative w-80 md:w-96 rounded-md bg-[#fff785] note-paper-shadow flex flex-col transition-transform duration-200 hover:-translate-y-1" data-purpose="active-yellow-note">
+<!-- Thanh tiêu đề cửa sổ ghi chú vàng -->
+<header class="h-9 px-2 flex items-center justify-between border-b border-black/5 bg-[#faea68] rounded-t-md cursor-move">
+<button class="w-7 h-7 flex items-center justify-center rounded hover:bg-black/10 text-neutral-800 transition" title="Ghi chú mới (+)">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path d="M12 4v16m8-8H4" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2"></path>
+</svg>
+</button>
+<div class="flex items-center gap-1">
+<button class="w-7 h-7 flex items-center justify-center rounded hover:bg-black/10 text-neutral-800 transition" title="Đổi màu sắc &amp; Menu ghi chú">
+<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+<circle cx="5" cy="12" r="2"></circle>
+<circle cx="12" cy="12" r="2"></circle>
+<circle cx="19" cy="12" r="2"></circle>
+</svg>
+</button>
+<button class="w-7 h-7 flex items-center justify-center rounded hover:bg-rose-500 hover:text-white text-neutral-800 transition" title="Đóng ghi chú">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path d="M6 18L18 6M6 6l12 12" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2"></path>
+</svg>
+</button>
+</div>
+</header>
+<!-- Badge cảnh báo Deadline thông minh -->
+<div class="px-4 pt-3 pb-1">
+<div class="flex items-center justify-between bg-amber-200/70 border border-amber-400/50 rounded px-2.5 py-1 text-xs text-amber-900 font-medium">
+<span class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-amber-600 animate-pulse"></span>
+<span class="">Hạn: <strong>17:30 hôm nay</strong></span>
+</span>
+<span class="bg-amber-600/15 px-1.5 py-0.5 rounded text-[10px] font-semibold text-amber-950">
+              Còn 2 giờ
+            </span>
+</div>
+</div>
+<!-- Nội dung ghi chú (Checklist + Công thức) -->
+<article class="p-4 pt-2 text-neutral-900 text-sm leading-relaxed flex-1 space-y-2.5 min-h-[220px]">
+<h2 class="font-bold text-base text-neutral-950 border-b border-black/10 pb-1">
+            Bữa tối: King Salmon sốt chanh bơ
+          </h2>
+<ul class="space-y-1.5 text-xs sm:text-sm">
+<li class="flex items-start gap-2">
+<input checked="" class="mt-1 rounded text-neutral-800 focus:ring-0 cursor-pointer" type="checkbox">
+<span class="line-through text-neutral-600">Mua phi lê cá hồi tươi ngon</span>
+</li>
+<li class="flex items-start gap-2">
+<input checked="" class="mt-1 rounded text-neutral-800 focus:ring-0 cursor-pointer" type="checkbox">
+<span class="line-through text-neutral-600">Bơ lạt, 2 quả chanh vàng, muối biển</span>
+</li>
+<li class="flex items-start gap-2">
+<input class="mt-1 rounded text-neutral-800 focus:ring-0 cursor-pointer" type="checkbox">
+<span class="">Áp chảo cá hồi trong 8 đến 10 phút</span>
+</li>
+<li class="flex items-start gap-2">
+<input class="mt-1 rounded text-neutral-800 focus:ring-0 cursor-pointer" type="checkbox">
+<span class="">Rưới sốt bơ chanh &amp; trang trí thì là tươi</span>
+</li>
+</ul>
+</article>
+<!-- Thanh công cụ soạn thảo tối giản dưới chân Sticky Note -->
+<footer class="h-10 px-3 bg-[#faea68]/70 border-t border-black/5 flex items-center justify-between text-neutral-700">
+<div class="flex items-center space-x-1 text-sm font-semibold">
+<button class="w-7 h-7 flex items-center justify-center rounded hover:bg-black/10 font-bold" title="In đậm">B</button>
+<button class="w-7 h-7 flex items-center justify-center rounded hover:bg-black/10 italic font-serif" title="In nghiêng">I</button>
+<button class="w-7 h-7 flex items-center justify-center rounded hover:bg-black/10 underline" title="Gạch chân">U</button>
+<button class="w-7 h-7 flex items-center justify-center rounded hover:bg-black/10 line-through" title="Gạch ngang chữ">ab</button>
+<button class="w-7 h-7 flex items-center justify-center rounded hover:bg-black/10" title="Danh sách công việc">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</button>
+</div>
+<button class="text-neutral-700 hover:text-black hover:bg-black/10 p-1.5 rounded transition" title="Đặt nhắc nhở báo thức">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</button>
+</footer>
+</section>
+<!-- END: ActiveYellowStickyNote -->
+<!-- BEGIN: StickyNotesHubWindow -->
+<!-- Cửa sổ chính bên phải: Quản lý danh sách ghi chú (Notes List Hub) -->
+<section class="w-80 md:w-88 bg-white/95 rounded-lg shadow-win-window flex flex-col border border-white/20 acrylic-glass overflow-hidden h-full" data-purpose="notes-hub-list-window" style="max-height: calc(100vh - 140px); height: auto;">
+<!-- Thanh tiêu đề cửa sổ Notes Hub -->
+<header class="h-10 px-3 bg-neutral-100/90 flex items-center justify-between border-b border-neutral-200">
+<div class="flex items-center gap-2">
+<button class="w-7 h-7 flex items-center justify-center rounded hover:bg-neutral-200 text-neutral-700 transition" title="Thêm ghi chú mới">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path d="M12 4v16m8-8H4" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</button>
+<span class="text-xs font-semibold text-neutral-700">Sticky Notes</span>
+</div>
+<div class="flex items-center gap-1">
+<button class="w-7 h-7 flex items-center justify-center rounded hover:bg-neutral-200 text-neutral-600" title="Cài đặt">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+<circle cx="12" cy="12" r="3"></circle>
+</svg>
+</button>
+<button class="w-7 h-7 flex items-center justify-center rounded hover:bg-rose-500 hover:text-white text-neutral-600 transition" title="Đóng danh sách">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path d="M6 18L18 6M6 6l12 12" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</button>
+</div>
+</header>
+<!-- Hộp tìm kiếm ghi chú -->
+<div class="p-2.5 bg-neutral-50/80 border-b border-neutral-200">
+<div class="relative flex items-center">
+<input class="w-full text-xs bg-white pl-8 pr-3 py-1.5 rounded border border-neutral-300 focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 text-neutral-800 placeholder-neutral-400" placeholder="Tìm kiếm ghi chú..." type="text">
+<svg class="w-3.5 h-3.5 text-neutral-400 absolute left-2.5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</div>
+</div>
+<!-- Danh sách thẻ ghi chú (Notes List) nhiều màu sắc pastel -->
+<div class="flex-1 overflow-y-auto custom-scroll p-2.5 space-y-2.5">
+<!-- Thẻ 1: Xanh dương (Blue note) -->
+<article class="p-3 rounded-md bg-[#d8f3fd] hover:brightness-95 border-l-4 border-sky-400 cursor-pointer shadow-sm transition">
+<div class="flex items-center justify-between text-[11px] mb-1">
+<span class="font-bold text-sky-950 truncate max-w-[170px]">Họp bàn dự án Q3</span>
+<span class="text-sky-800/80">3:00 PM</span>
+</div>
+<p class="text-xs text-slate-700 line-clamp-2">
+              Coastal Kitchen, gặp đối tác Bea bàn về giải pháp đám mây.
+            </p>
+</article>
+<!-- Thẻ 2: Hồng pastel (Pink note) có cảnh báo deadline đỏ khẩn cấp -->
+<article class="p-3 rounded-md bg-[#fde2e4] hover:brightness-95 border-l-4 border-rose-400 cursor-pointer shadow-sm transition relative overflow-hidden">
+<div class="flex items-center justify-between text-[11px] mb-1">
+<span class="font-bold text-rose-950 truncate max-w-[170px]">Báo cáo tài chính quý</span>
+<span class="px-1.5 py-0.2 bg-rose-600 text-white rounded font-medium text-[9px] uppercase tracking-wide">
+                Hôm nay!
+              </span>
+</div>
+<p class="text-xs text-rose-900/90 line-clamp-2">
+              Gửi bảng tổng hợp chi phí marketing trước 18:00 cho ban giám đốc.
+            </p>
+</article>
+<!-- Thẻ 3: Vàng (Yellow note) -->
+<article class="p-3 rounded-md bg-[#fef7a7] hover:brightness-95 border-l-4 border-amber-400 cursor-pointer shadow-sm transition">
+<div class="flex items-center justify-between text-[11px] mb-1">
+<span class="font-bold text-amber-950 truncate max-w-[170px]">King Salmon bơ chanh</span>
+<span class="text-amber-800/80">9:00 AM</span>
+</div>
+<p class="text-xs text-amber-900/85 line-clamp-2">
+              Mua phi lê cá hồi, bơ lạt, chanh vàng, muối tiêu áp chảo 10 phút.
+            </p>
+</article>
+<!-- Thẻ 4: Xanh lá mạ / Mint (Green note) -->
+<article class="p-3 rounded-md bg-[#e2f9d2] hover:brightness-95 border-l-4 border-emerald-400 cursor-pointer shadow-sm transition">
+<div class="flex items-center justify-between text-[11px] mb-1">
+<span class="font-bold text-emerald-950 truncate max-w-[170px]">Thông điệp tích cực</span>
+<span class="text-emerald-800/80">8:10 AM</span>
+</div>
+<p class="text-xs text-emerald-900/80 italic line-clamp-2">
+              "Đừng ngần ngại ngồi lại một lát và lắng nghe chính mình suy nghĩ."
+            </p>
+</article>
+<!-- Thẻ 5: Tím Lavender (Purple note) -->
+<article class="p-3 rounded-md bg-[#ede4ff] hover:brightness-95 border-l-4 border-purple-400 cursor-pointer shadow-sm transition">
+<div class="flex items-center justify-between text-[11px] mb-1">
+<span class="font-bold text-purple-950 truncate max-w-[170px]">Địa chỉ khách sạn tại Maui</span>
+<span class="text-purple-800/80">12:30 PM</span>
+</div>
+<p class="text-xs text-purple-900/80 line-clamp-2">
+              Số 606 Kalula Drive, Lahaina - Check-in lúc 14:00 ngày 25/10.
+            </p>
+</article>
+</div>
+</section>
+<!-- END: StickyNotesHubWindow -->
+<!-- BEGIN: UrgentOverlaidNote -->
+<!-- Mẩu ghi chú nhỏ màu hồng khẩn cấp dán nổi nhẹ góc desktop -->
+<aside class="hidden xl:block absolute bottom-20 left-16 w-56 p-3 bg-[#ffcdd2] rounded shadow-lg border-t-2 border-red-500 rotate-2 hover:rotate-0 transition-transform" data-purpose="urgent-deadline-note">
+<div class="flex items-center justify-between border-b border-black/10 pb-1 mb-1.5">
+<span class="text-[11px] font-bold text-red-900 flex items-center gap-1">
+<svg class="w-3.5 h-3.5 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+<path clip-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" fill-rule="evenodd"></path>
+</svg>
+            Hạn chót khẩn cấp!
+          </span>
+<span class="text-[10px] text-red-700 font-semibold">17:00</span>
+</div>
+<p class="text-xs text-neutral-800 font-medium">
+          Nộp file thiết kế mockup Sticky Notes trước khi tan ca!
+        </p>
+</aside>
+<!-- END: UrgentOverlaidNote -->
+</main>
+<!-- END: WorkspaceContainer -->
+<!-- BEGIN: WindowsTaskbar -->
+<!-- Thanh tác vụ Windows 11 ở dưới cùng màn hình -->
+<footer class="h-12 w-full bg-slate-950/75 taskbar-blur border-t border-white/10 flex items-center justify-between px-3 z-30">
+<!-- Nút Start và Widget Windows căn giữa hoặc lệch trái nhẹ -->
+<div class="flex items-center gap-3">
+<!-- Thời tiết Widget -->
+<div class="flex items-center gap-2 px-2 py-1 rounded hover:bg-white/10 text-white/80 cursor-pointer text-xs">
+<svg class="w-4 h-4 text-amber-400" fill="currentColor" viewBox="0 0 20 20">
+<path clip-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" fill-rule="evenodd"></path>
+</svg>
+<span class="hidden sm:inline">28°C Nắng nhẹ</span>
+</div>
+</div>
+<!-- Các biểu tượng ứng dụng ở chính giữa thanh Taskbar -->
+<nav class="flex items-center space-x-1.5 absolute left-1/2 -translate-x-1/2">
+<!-- Start Button (Windows logo) -->
+<button class="w-9 h-9 flex items-center justify-center rounded hover:bg-white/10 transition" title="Bắt đầu">
+<div class="grid grid-cols-2 gap-0.5 w-4 h-4">
+<div class="bg-sky-400 rounded-sm"></div>
+<div class="bg-sky-400 rounded-sm"></div>
+<div class="bg-sky-400 rounded-sm"></div>
+<div class="bg-sky-400 rounded-sm"></div>
+</div>
+</button>
+<!-- Search bar/icon -->
+<button class="w-9 h-9 flex items-center justify-center rounded hover:bg-white/10 text-white/90 transition" title="Tìm kiếm">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</button>
+<!-- Trình duyệt File Explorer -->
+<button class="w-9 h-9 flex items-center justify-center rounded hover:bg-white/10 transition" title="File Explorer">
+<div class="w-5 h-4 bg-amber-400 rounded-sm relative shadow-sm">
+<div class="absolute -top-1 left-0 w-2 h-1 bg-amber-500 rounded-t-sm"></div>
+</div>
+</button>
+<!-- Ứng dụng Sticky Notes đang kích hoạt (Active App Icon) -->
+<button class="w-9 h-9 flex items-center justify-center rounded bg-white/15 relative transition" title="Sticky Notes (Đang mở)">
+<!-- Icon Sticky Note vàng viền gấp -->
+<div class="w-5 h-5 bg-amber-300 rounded shadow-sm flex flex-col justify-between p-0.5 border border-amber-400">
+<div class="w-3 h-0.5 bg-amber-600 rounded"></div>
+<div class="w-3.5 h-0.5 bg-amber-600 rounded"></div>
+<div class="w-2.5 h-0.5 bg-amber-600 rounded"></div>
+</div>
+<!-- Dấu gạch chỉ báo ứng dụng đang chạy -->
+<span class="absolute bottom-0 w-3 h-0.5 bg-sky-400 rounded-full"></span>
+</button>
+<!-- Trình duyệt Edge -->
+<button class="w-9 h-9 flex items-center justify-center rounded hover:bg-white/10 text-sky-400 transition" title="Microsoft Edge">
+<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+<path d="M0 12C0 5.373 5.373 0 12 0c5.968 0 10.92 4.35 11.854 10.082-1.393-2.61-4.14-4.382-7.304-4.382-4.639 0-8.4 3.761-8.4 8.4 0 1.258.277 2.451.773 3.522C4.16 26.257 0 19.645 0 12z"></path>
+</svg>
+</button>
+</nav>
+<!-- Khay hệ thống (System Tray & Đồng hồ) bên phải -->
+<aside class="flex items-center space-x-2 text-white/80 text-xs">
+<!-- Nhóm biểu tượng Âm lượng, Mạng, Pin -->
+<div class="flex items-center space-x-1.5 px-2 py-1 rounded hover:bg-white/10 cursor-pointer">
+<svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+<path clip-rule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243 1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.983 3.983 0 00-1.172-2.828 1 1 0 010-1.415z" fill-rule="evenodd"></path>
+</svg>
+<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</div>
+<!-- Đồng hồ và ngày tháng -->
+<div class="text-right px-2 py-0.5 rounded hover:bg-white/10 cursor-pointer">
+<div class="leading-tight font-medium text-[11px]" id="current-time">21:17</div>
+<div class="leading-tight text-[10px] text-white/60" id="current-date">11/10/2026</div>
+</div>
+</aside>
+</footer>
+<!-- END: WindowsTaskbar -->
+</div>
+<!-- END: DesktopEnvironment -->
+<!-- JavaScript cập nhật thời gian Taskbar thực tế -->
+<script data-purpose="realtime-clock">
+    function updateClock() {
+      const now = new Date();
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      const day = String(now.getDate()).padStart(2, '0');
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const year = now.getFullYear();
+
+      const timeEl = document.getElementById('current-time');
+      const dateEl = document.getElementById('current-date');
+      
+      if (timeEl) timeEl.textContent = `${hours}:${minutes}`;
+      if (dateEl) dateEl.textContent = `${day}/${month}/${year}`;
+    }
+    updateClock();
+    setInterval(updateClock, 1000);
+  </script>
+
+
+</body></html>
