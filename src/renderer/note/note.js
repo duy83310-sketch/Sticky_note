@@ -11,10 +11,20 @@ const noteTitle = document.getElementById('noteTitle');
 const noteEditor = document.getElementById('noteEditor');
 const checklistView = document.getElementById('checklistView');
 const btnAddCheckItem = document.getElementById('btnAddCheckItem');
-const deadlineBanner = document.getElementById('deadlineBanner');
-const dlDot = document.getElementById('dlDot');
-const dlTimeText = document.getElementById('dlTimeText');
-const dlBadgeText = document.getElementById('dlBadgeText');
+
+// Urgency & Deadline Strip Elements
+const urgencyBar = document.getElementById('urgencyBar');
+const urgencyNormalView = document.getElementById('urgencyNormalView');
+const urgencyActiveView = document.getElementById('urgencyActiveView');
+const btnSetUrgentQuick = document.getElementById('btnSetUrgentQuick');
+const btnSetDeadlineQuick = document.getElementById('btnSetDeadlineQuick');
+const btnEditDeadlineQuick = document.getElementById('btnEditDeadlineQuick');
+const btnRemoveUrgentQuick = document.getElementById('btnRemoveUrgentQuick');
+const urgencyCountdownText = document.getElementById('urgencyCountdownText');
+const flyoutToggleUrgent = document.getElementById('flyoutToggleUrgent');
+const flyoutUrgentIcon = document.getElementById('flyoutUrgentIcon');
+const flyoutUrgentLabel = document.getElementById('flyoutUrgentLabel');
+const noteToast = document.getElementById('noteToast');
 
 // Progress Bar Elements
 const checklistProgress = document.getElementById('checklistProgress');
@@ -103,47 +113,69 @@ document.querySelectorAll('.color-swatch').forEach(swatch => {
   });
 });
 
-// ── Deadline Engine ─────────────────────────────────────────────────────────
+// ── Urgency & Deadline Engine ────────────────────────────────────────────────
+
+let toastTimer = null;
+function showToast(text) {
+  if (!noteToast) return;
+  noteToast.textContent = text;
+  noteToast.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => {
+    noteToast.classList.remove('show');
+  }, 1900);
+}
 
 function renderDeadline() {
-  if (!currentNote || !currentNote.deadline) {
-    deadlineBanner.style.display = 'none';
-    return;
+  if (!currentNote) return;
+
+  const isUrgent = !!currentNote.isUrgent;
+  body.classList.toggle('is-urgent', isUrgent);
+
+  if (flyoutToggleUrgent) {
+    flyoutToggleUrgent.classList.toggle('active', isUrgent);
+    if (flyoutUrgentLabel) {
+      flyoutUrgentLabel.textContent = isUrgent ? 'Hủy chế độ Khẩn cấp' : 'Đánh dấu KHẨN CẤP';
+    }
+    if (flyoutUrgentIcon) {
+      flyoutUrgentIcon.textContent = isUrgent ? '✕' : '🔥';
+    }
   }
 
-  deadlineBanner.style.display = 'flex';
-  const targetDate = new Date(currentNote.deadline);
-  const now = Date.now();
-  const diffMs = targetDate.getTime() - now;
+  if (isUrgent) {
+    if (urgencyNormalView) urgencyNormalView.style.display = 'none';
+    if (urgencyActiveView) urgencyActiveView.style.display = 'flex';
 
-  // Format thời gian hiển thị
-  const isToday = targetDate.toDateString() === new Date().toDateString();
-  const timeStr = targetDate.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
-  const dateStr = targetDate.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
-  dlTimeText.textContent = isToday ? `${timeStr} hôm nay` : `${timeStr} ngày ${dateStr}`;
+    if (currentNote.deadline) {
+      const targetDate = new Date(currentNote.deadline);
+      const diffMs = targetDate.getTime() - Date.now();
+      if (diffMs < 0) {
+        urgencyCountdownText.textContent = 'Quá hạn!';
+      } else {
+        urgencyCountdownText.textContent = `Còn ${formatCountdown(diffMs)}`;
+      }
+    } else {
+      urgencyCountdownText.textContent = 'Ưu tiên cao nhất';
+    }
+  } else if (currentNote.deadline) {
+    if (urgencyNormalView) urgencyNormalView.style.display = 'flex';
+    if (urgencyActiveView) urgencyActiveView.style.display = 'none';
 
-  // 3 cấp độ: Safe (>48h) / Warning (24-48h) / Urgent (<6h hoặc quá hạn)
-  dlDot.classList.remove('pulse-beacon');
-  dlBadgeText.className = 'deadline-badge';
-
-  if (diffMs < 0) {
-    dlDot.style.background = '#D13438';
-    dlDot.classList.add('pulse-beacon');
-    dlBadgeText.classList.add('dl-urgent');
-    dlBadgeText.textContent = 'Quá hạn!';
-  } else if (diffMs < 6 * 3600 * 1000) {
-    dlDot.style.background = '#D13438';
-    dlDot.classList.add('pulse-beacon');
-    dlBadgeText.classList.add('dl-urgent');
-    dlBadgeText.textContent = `Còn ${formatCountdown(diffMs)}`;
-  } else if (diffMs < 48 * 3600 * 1000) {
-    dlDot.style.background = '#D83B01';
-    dlBadgeText.classList.add('dl-warn');
-    dlBadgeText.textContent = `Còn ${formatCountdown(diffMs)}`;
+    const targetDate = new Date(currentNote.deadline);
+    const diffMs = targetDate.getTime() - Date.now();
+    const isOver = diffMs < 0;
+    const timeStr = formatCountdown(Math.abs(diffMs));
+    const normalBadge = urgencyNormalView.querySelector('.badge-normal');
+    if (normalBadge) {
+      normalBadge.textContent = isOver ? `⏰ Quá hạn ${timeStr}` : `⏰ Hạn chót: còn ${timeStr}`;
+    }
   } else {
-    dlDot.style.background = '#107C41';
-    dlBadgeText.classList.add('dl-safe');
-    dlBadgeText.textContent = `Còn ${formatCountdown(diffMs)}`;
+    if (urgencyNormalView) urgencyNormalView.style.display = 'flex';
+    if (urgencyActiveView) urgencyActiveView.style.display = 'none';
+    const normalBadge = urgencyNormalView.querySelector('.badge-normal');
+    if (normalBadge) {
+      normalBadge.textContent = '⚪ Mức độ: Bình thường';
+    }
   }
 }
 
@@ -154,15 +186,37 @@ function formatCountdown(ms) {
     const days = Math.floor(hours / 24);
     return `${days} ngày`;
   }
-  if (hours > 0) return `${hours} giờ`;
+  if (hours > 0) return `${hours} giờ ${minutes}p`;
   return `${Math.max(1, minutes)} phút`;
 }
 
 // Cập nhật deadline mỗi 30s
 setInterval(renderDeadline, 30000);
 
+// Urgency Quick Toggles
+async function toggleUrgent() {
+  const newUrgent = await window.api.toggleUrgentNote(noteId);
+  if (currentNote) {
+    currentNote.isUrgent = newUrgent;
+    if (newUrgent && !currentNote.deadline) {
+      currentNote.deadline = new Date(Date.now() + 2 * 3600 * 1000).toISOString();
+    }
+  }
+  renderDeadline();
+  showToast(newUrgent ? '🔥 Đã bật chế độ KHẨN CẤP!' : 'Đã chuyển về mức Bình thường');
+}
+
+if (btnSetUrgentQuick) btnSetUrgentQuick.addEventListener('click', toggleUrgent);
+if (btnRemoveUrgentQuick) btnRemoveUrgentQuick.addEventListener('click', toggleUrgent);
+if (flyoutToggleUrgent) {
+  flyoutToggleUrgent.addEventListener('click', () => {
+    toggleUrgent();
+  });
+}
+
 // Deadline Popover & Presets
-deadlineBanner.addEventListener('click', openDeadlineFlyout);
+if (btnSetDeadlineQuick) btnSetDeadlineQuick.addEventListener('click', openDeadlineFlyout);
+if (btnEditDeadlineQuick) btnEditDeadlineQuick.addEventListener('click', openDeadlineFlyout);
 btnOpenDeadline.addEventListener('click', openDeadlineFlyout);
 
 function openDeadlineFlyout(e) {
@@ -179,7 +233,7 @@ function openDeadlineFlyout(e) {
 }
 
 document.getElementById('quickDl2h').addEventListener('click', () => {
-  setDeadlineTime(new Date(Date.now() + 2 * 3600 * 1000));
+  setDeadlineTime(new Date(Date.now() + 2 * 3600 * 1000), true);
 });
 
 document.getElementById('quickDlToday').addEventListener('click', () => {
@@ -215,11 +269,15 @@ document.getElementById('btnClearDeadline').addEventListener('click', () => {
   setDeadlineTime(null);
 });
 
-function setDeadlineTime(dateObj) {
+function setDeadlineTime(dateObj, makeUrgent = false) {
   if (currentNote) {
     currentNote.deadline = dateObj ? dateObj.toISOString() : null;
+    if (makeUrgent) {
+      currentNote.isUrgent = true;
+    }
     renderDeadline();
     scheduleSave();
+    showToast(dateObj ? '⏰ Đã cập nhật hạn chót!' : 'Đã xóa hạn chót');
   }
   closeFlyouts();
 }
@@ -415,14 +473,15 @@ noteEditor.addEventListener('input', scheduleSave);
 // ── Pin / Header Controls ───────────────────────────────────────────────────
 
 function updatePinButton(isPinned) {
-  btnPin.style.opacity = isPinned ? '1' : '0.4';
-  btnPin.title = isPinned ? 'Bỏ ghim trên cùng' : 'Ghim trên cùng';
+  btnPin.classList.toggle('pinned-active', isPinned);
+  btnPin.title = isPinned ? 'Đang ghim trên cùng (Nhấn để bỏ ghim)' : 'Ghim trên cùng màn hình (Always on top)';
 }
 
 btnPin.addEventListener('click', async () => {
   const isPinned = await window.api.togglePinNote(noteId);
   if (currentNote) currentNote.pinned = isPinned;
   updatePinButton(isPinned);
+  showToast(isPinned ? '📌 Đã ghim trên cùng màn hình (Always on top)' : '📍 Đã bỏ ghim trên cùng');
 });
 
 btnNewNote.addEventListener('click', () => {
@@ -514,7 +573,10 @@ window.api.onNotesUpdated(async () => {
   const updated = await window.api.getNote(noteId);
   if (updated && !currentNote?.locked) {
     currentNote.pinned = updated.pinned;
+    currentNote.isUrgent = updated.isUrgent;
+    currentNote.deadline = updated.deadline;
     updatePinButton(currentNote.pinned !== false);
+    renderDeadline();
   }
 });
 

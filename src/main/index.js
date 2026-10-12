@@ -83,15 +83,34 @@ ipcMain.handle('toggle-pin-note', (_e, id) => {
   if (!note) return false;
   const newPinned = !note.pinned;
   store.updateNote(id, { pinned: newPinned });
-  const settings = store.getSettings();
+
   if (windowManager.noteWindows.has(id)) {
     const win = windowManager.noteWindows.get(id);
     if (!win.isDestroyed()) {
-      win.setAlwaysOnTop(newPinned ? settings.alwaysOnTop : false);
+      // Ghim nổi tuyệt đối trên màn hình
+      win.setAlwaysOnTop(newPinned, 'screen-saver');
+      if (newPinned) {
+        win.moveTop();
+        win.focus();
+      }
     }
   }
   windowManager.notifyNotesUpdated();
   return newPinned;
+});
+
+ipcMain.handle('toggle-urgent-note', (_e, id) => {
+  const note = store.getNote(id);
+  if (!note) return false;
+  const newUrgent = !note.isUrgent;
+  const updates = { isUrgent: newUrgent };
+  if (newUrgent && !note.deadline) {
+    // Mặc định gán hạn chót khẩn cấp trong 2 giờ
+    updates.deadline = new Date(Date.now() + 2 * 3600 * 1000).toISOString();
+  }
+  store.updateNote(id, updates);
+  windowManager.notifyNotesUpdated();
+  return newUrgent;
 });
 
 // Security & PIN

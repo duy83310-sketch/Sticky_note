@@ -292,8 +292,121 @@ body.theme-charcoal .note-footer {
   background: rgba(26, 26, 29, 0.85);
   border-top: 1px solid var(--note-charcoal-border);
 }
-body.theme-charcoal .btn-icon:hover {
-  background: rgba(255, 255, 255, 0.1);
+/* Pinned State for Note Window */
+.btn-pin.pinned-active {
+  background: #0078d4 !important;
+  color: #ffffff !important;
+  opacity: 1 !important;
+  border-radius: var(--radius-sm);
+  transform: rotate(-45deg);
+  box-shadow: 0 2px 8px rgba(0, 120, 212, 0.5);
+}
+
+/* Floating Toast Notification */
+.fluent-toast {
+  position: absolute;
+  bottom: 46px;
+  left: 50%;
+  transform: translateX(-50%) translateY(10px);
+  background: rgba(25, 25, 32, 0.94);
+  backdrop-filter: blur(16px);
+  color: #ffffff;
+  padding: 5px 14px;
+  border-radius: var(--radius-pill);
+  font-size: 11.5px;
+  font-weight: 600;
+  box-shadow: var(--shadow-flyout);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  pointer-events: none;
+  opacity: 0;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 200;
+  white-space: nowrap;
+}
+.fluent-toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* Urgent Note Accent Aura */
+body.is-urgent {
+  box-shadow: 0 0 0 2px #d13438, 0 16px 40px rgba(209, 52, 56, 0.35) !important;
+}
+body.is-urgent .note-header {
+  border-bottom: 2px solid #d13438 !important;
+}
+
+/* Interactive Urgency & Deadline Banner Strip */
+.deadline-strip {
+  margin: 6px 12px 2px 12px;
+  padding: 5px 10px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11.5px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+body.theme-charcoal .deadline-strip {
+  border-color: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+}
+.deadline-strip:hover {
+  filter: brightness(0.96);
+}
+.deadline-strip.active-urgent {
+  background: var(--dl-urgent-bg) !important;
+  border-color: var(--dl-urgent-border) !important;
+  color: var(--dl-urgent-text) !important;
+}
+.deadline-strip.active-warn {
+  background: var(--dl-warn-bg) !important;
+  border-color: var(--dl-warn-border) !important;
+  color: var(--dl-warn-text) !important;
+}
+.deadline-strip.active-safe {
+  background: var(--dl-safe-bg) !important;
+  border-color: var(--dl-safe-border) !important;
+  color: var(--dl-safe-text) !important;
+}
+
+.btn-strip-urgent {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2.5px 8px;
+  border-radius: 3px;
+  background: rgba(209, 52, 56, 0.15);
+  color: #c0292d;
+  border: 1px solid rgba(209, 52, 56, 0.3);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.btn-strip-urgent:hover {
+  background: #d13438;
+  color: #ffffff;
+}
+.btn-strip-dl {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2.5px 8px;
+  border-radius: 3px;
+  background: rgba(0, 0, 0, 0.06);
+  color: inherit;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+body.theme-charcoal .btn-strip-dl {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+.btn-strip-dl:hover {
+  background: #0078d4;
+  color: #ffffff;
+  border-color: #0078d4;
 }
 
 /* Modals & Popovers */
@@ -578,4 +691,241 @@ body.theme-charcoal .btn-add-item {
 body.theme-charcoal .btn-add-item:hover {
   background: rgba(255, 255, 255, 0.08);
 }
+
+/* ── Pin Button Active State & Effects ───────────────────────────── */
+.btn-pin {
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  position: relative;
+}
+
+.btn-pin.pinned-active {
+  background: #0078d4 !important;
+  color: #ffffff !important;
+  border-radius: 6px !important;
+  box-shadow: 0 2px 6px rgba(0, 120, 212, 0.45) !important;
+  transform: rotate(-45deg);
+  opacity: 1 !important;
+}
+
+.btn-pin.pinned-active svg {
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
+}
+
+/* ── Fluent Toast Notification ──────────────────────────────────── */
+.fluent-toast {
+  position: fixed;
+  bottom: 46px;
+  left: 50%;
+  transform: translateX(-50%) translateY(16px) scale(0.95);
+  background: rgba(30, 32, 38, 0.94);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  color: #ffffff;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 11.5px;
+  font-weight: 500;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 999;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  white-space: nowrap;
+}
+
+.fluent-toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0) scale(1);
+}
+
+/* ── Urgent Note Window Highlights ──────────────────────────────── */
+body.is-urgent #noteContainer {
+  box-shadow: 0 0 0 2px #d13438, 0 8px 32px rgba(209, 52, 56, 0.25) !important;
+}
+
+body.is-urgent .note-header {
+  border-bottom: 2px solid #d13438;
+}
+
+/* ── Interactive Urgency & Deadline Strip ───────────────────────── */
+.urgency-strip {
+  margin: 4px 12px 2px 12px;
+  padding: 5px 8px;
+  border-radius: var(--radius-sm);
+  background: rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  transition: all 0.2s ease;
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+}
+
+body.theme-charcoal .urgency-strip {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+body.is-urgent .urgency-strip {
+  background: linear-gradient(90deg, rgba(209, 52, 56, 0.16) 0%, rgba(232, 17, 35, 0.08) 100%);
+  border-color: rgba(209, 52, 56, 0.38);
+}
+
+.strip-view {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.strip-badge {
+  font-size: 11px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.badge-normal {
+  opacity: 0.7;
+}
+
+.badge-urgent {
+  color: #d13438;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+body.theme-charcoal .badge-urgent {
+  color: #ff6b6e;
+}
+
+.strip-countdown {
+  font-size: 11px;
+  font-family: var(--font-mono);
+  background: rgba(209, 52, 56, 0.12);
+  color: #d13438;
+  padding: 1px 6px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+}
+
+body.theme-charcoal .strip-countdown {
+  background: rgba(255, 107, 110, 0.2);
+  color: #ff8b8e;
+}
+
+.strip-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.btn-strip {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  line-height: 1.2;
+}
+
+.btn-strip-fire {
+  background: rgba(209, 52, 56, 0.1);
+  color: #d13438;
+  border-color: rgba(209, 52, 56, 0.25);
+}
+.btn-strip-fire:hover {
+  background: #d13438;
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(209, 52, 56, 0.35);
+}
+
+.btn-strip-time {
+  background: rgba(0, 0, 0, 0.05);
+  color: inherit;
+  opacity: 0.85;
+}
+body.theme-charcoal .btn-strip-time {
+  background: rgba(255, 255, 255, 0.1);
+}
+.btn-strip-time:hover {
+  opacity: 1;
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.btn-strip-edit {
+  background: rgba(0, 0, 0, 0.06);
+  color: inherit;
+  opacity: 0.85;
+}
+.btn-strip-edit:hover {
+  opacity: 1;
+  background: rgba(0, 0, 0, 0.12);
+}
+
+.btn-strip-clear {
+  background: rgba(209, 52, 56, 0.1);
+  color: #d13438;
+}
+.btn-strip-clear:hover {
+  background: rgba(209, 52, 56, 0.2);
+}
+
+/* ── Deadline Flyout Enhanced ─────────────────────────────────────── */
+.flyout-section-title {
+  font-size: 11.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.75;
+  margin-bottom: 6px;
+  margin-top: 6px;
+}
+
+.btn-urgent-toggle {
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+  border: 1px solid rgba(209, 52, 56, 0.3);
+  background: rgba(209, 52, 56, 0.08);
+  color: #d13438;
+}
+
+.btn-urgent-toggle.active {
+  background: #d13438;
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(209, 52, 56, 0.4);
+}
+
+/* ── Hub Urgent Card & Action Styling ────────────────────────────── */
+.note-card.is-card-urgent {
+  border-left: 5px solid #d13438 !important;
+  box-shadow: 0 2px 10px rgba(209, 52, 56, 0.35) !important;
+}
+
+.btn-toggle-urgent {
+  transition: all 0.15s ease;
+}
+
+.btn-toggle-urgent.urgent-active {
+  background: rgba(209, 52, 56, 0.2) !important;
+  color: #d13438 !important;
+  border: 1px solid rgba(209, 52, 110, 0.3) !important;
+}
+
 

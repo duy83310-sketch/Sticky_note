@@ -44,8 +44,10 @@ async function initHub() {
 async function loadAndRenderNotes() {
   allNotes = await window.api.getNotes();
 
-  // Sắp xếp: Ghi chú có deadline khẩn cấp lên đầu, sau đó theo thời gian cập nhật
+  // Sắp xếp: Ghi chú khẩn cấp lên đầu, sau đó ghi chú có hạn chót, sau đó theo thời gian cập nhật
   allNotes.sort((a, b) => {
+    if (a.isUrgent && !b.isUrgent) return -1;
+    if (!a.isUrgent && b.isUrgent) return 1;
     if (a.deadline && !b.deadline) return -1;
     if (!a.deadline && b.deadline) return 1;
     if (a.deadline && b.deadline) {
@@ -75,6 +77,7 @@ function renderCards() {
     // 2. Lọc theo danh mục tab
     if (currentFilter === 'deadline') return !!note.deadline;
     if (currentFilter === 'urgent') {
+      if (note.isUrgent) return true;
       if (!note.deadline) return false;
       const diff = new Date(note.deadline).getTime() - Date.now();
       return diff < 6 * 3600 * 1000; // Dưới 6 giờ hoặc quá hạn
@@ -99,18 +102,28 @@ function renderCards() {
   filtered.forEach(note => {
     const card = document.createElement('article');
     const colorClass = getCardColorClass(note.color);
-    card.className = `note-card ${colorClass}`;
+    card.className = `note-card ${colorClass} ${note.isUrgent ? 'is-card-urgent' : ''}`;
     card.dataset.id = note.id;
 
     // Deadline hoặc timestamp
     const dlInfo = calculateDeadlineInfo(note.deadline);
-    const badgeHtml = dlInfo ? `
-      <span class="card-badge ${dlInfo.cls}">
-        ${dlInfo.text}
-      </span>
-    ` : `
-      <span style="opacity: 0.7; font-size: 10px;">${formatTimeShort(note.updatedAt)}</span>
-    `;
+    let badgeHtml = '';
+    if (note.isUrgent) {
+      badgeHtml = `
+        <span class="card-badge dl-urgent" style="display:inline-flex;align-items:center;gap:4px;">
+          <span class="dl-dot pulse-beacon" style="background:#D13438;width:6px;height:6px;border-radius:50%;display:inline-block;margin:0;"></span>
+          🔥 KHẨN CẤP${dlInfo ? ` (${dlInfo.text})` : ''}
+        </span>
+      `;
+    } else if (dlInfo) {
+      badgeHtml = `
+        <span class="card-badge ${dlInfo.cls}">
+          ${dlInfo.text}
+        </span>
+      `;
+    } else {
+      badgeHtml = `<span style="opacity: 0.7; font-size: 10px;">${formatTimeShort(note.updatedAt)}</span>`;
+    }
 
     // Nội dung tóm tắt & Thanh tiến độ xanh lá bao trùm theo tỉ lệ
     let cardBodyHtml = '';
@@ -171,7 +184,8 @@ function renderCards() {
         <span>${formatDateShort(note.updatedAt)}</span>
         <div class="card-actions">
           <button class="card-btn btn-open" title="Mở ghi chú">Mở</button>
-          <button class="card-btn btn-pin" title="${note.pinned !== false ? 'Bỏ ghim' : 'Ghim'}">${note.pinned !== false ? '📌' : '📍'}</button>
+          <button class="card-btn btn-toggle-urgent ${note.isUrgent ? 'urgent-active' : ''}" title="${note.isUrgent ? 'Hủy khẩn cấp' : 'Đánh dấu khẩn cấp'}">${note.isUrgent ? '🔥 Khẩn' : '⚡ Gấp'}</button>
+          <button class="card-btn btn-pin ${note.pinned !== false ? 'pinned-active' : ''}" title="${note.pinned !== false ? 'Bỏ ghim' : 'Ghim'}">${note.pinned !== false ? '📌' : '📍'}</button>
           <button class="card-btn card-btn-delete btn-delete" title="Xóa">Xóa</button>
         </div>
       </div>
@@ -186,6 +200,13 @@ function renderCards() {
     card.querySelector('.btn-open').addEventListener('click', (e) => {
       e.stopPropagation();
       window.api.openNote(note.id);
+    });
+
+    // Nút Khẩn cấp
+    card.querySelector('.btn-toggle-urgent').addEventListener('click', async (e) => {
+      e.stopPropagation();
+      await window.api.toggleUrgentNote(note.id);
+      await loadAndRenderNotes();
     });
 
     // Nút ghim

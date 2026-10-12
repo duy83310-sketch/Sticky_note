@@ -305,13 +305,34 @@
       </div>
     </header>
 
-    <!-- Smart Deadline Warning Banner -->
-    <div id="deadlineBanner" class="no-drag" style="display: none;">
-      <div style="display: flex; align-items: center;">
-        <span id="dlDot" class="dl-dot pulse-beacon"></span>
-        <span id="dlTitleText" style="font-weight: 500;">Hạn: <strong id="dlTimeText">17:30 hôm nay</strong></span>
+    <!-- Interactive Urgency & Deadline Strip -->
+    <div id="urgencyBar" class="urgency-strip no-drag">
+      <div id="urgencyNormalView" class="strip-view" style="display: flex;">
+        <span class="strip-badge badge-normal">⚪ Bình thường</span>
+        <div class="strip-actions">
+          <button id="btnSetUrgentQuick" class="btn-strip btn-strip-fire" title="Đánh dấu công việc khẩn cấp">
+            🔥 Khẩn cấp
+          </button>
+          <button id="btnSetDeadlineQuick" class="btn-strip btn-strip-time" title="Đặt ngày giờ hạn chót">
+            ⏰ Hạn chót
+          </button>
+        </div>
       </div>
-      <span id="dlBadgeText" class="deadline-badge">Còn 2 giờ</span>
+      <div id="urgencyActiveView" class="strip-view" style="display: none;">
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <span class="dl-dot pulse-beacon" style="background: #d13438;"></span>
+          <span class="strip-badge badge-urgent">🔥 KHẨN CẤP</span>
+          <span id="urgencyCountdownText" class="strip-countdown">Còn 2 giờ</span>
+        </div>
+        <div class="strip-actions">
+          <button id="btnEditDeadlineQuick" class="btn-strip btn-strip-edit" title="Chỉnh sửa giờ hạn chót">
+            ⏰ Đổi giờ
+          </button>
+          <button id="btnRemoveUrgentQuick" class="btn-strip btn-strip-clear" title="Hủy trạng thái khẩn cấp">
+            ✕ Hủy
+          </button>
+        </div>
+      </div>
     </div>
 
     <!-- Scrollable Content Area -->
@@ -387,11 +408,16 @@
       </button>
     </div>
 
-    <!-- Deadline Setting Flyout -->
+    <!-- Deadline & Urgency Setting Flyout -->
     <div id="deadlineFlyout" class="flyout-menu no-drag">
-      <div style="font-size: 12px; font-weight: 600; margin-bottom: 8px;">⏰ Đặt hạn chót (Smart Deadline)</div>
+      <div class="flyout-section-title">🔥 Mức độ ưu tiên</div>
+      <button id="flyoutToggleUrgent" class="btn-urgent-toggle" style="margin-bottom: 8px;">
+        <span id="flyoutUrgentIcon">🔥</span> <span id="flyoutUrgentLabel">Đánh dấu KHẨN CẤP</span>
+      </button>
+
+      <div class="flyout-section-title">⏰ Hạn chót (Smart Deadline)</div>
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-bottom: 8px;">
-        <button id="quickDl2h" class="menu-item" style="justify-content: center; font-size: 11px; background: rgba(0,0,0,0.04);">+2 giờ</button>
+        <button id="quickDl2h" class="menu-item" style="justify-content: center; font-size: 11px; background: rgba(0,0,0,0.04);">🔥 Gấp (+2 giờ)</button>
         <button id="quickDlToday" class="menu-item" style="justify-content: center; font-size: 11px; background: rgba(0,0,0,0.04);">17:30 Hôm nay</button>
         <button id="quickDlTonight" class="menu-item" style="justify-content: center; font-size: 11px; background: rgba(0,0,0,0.04);">21:00 Tối nay</button>
         <button id="quickDlTomorrow" class="menu-item" style="justify-content: center; font-size: 11px; background: rgba(0,0,0,0.04);">09:00 Ngày mai</button>
@@ -399,7 +425,7 @@
       <input id="customDlInput" type="datetime-local" class="fluent-input" style="color:#000; background:rgba(0,0,0,0.05); margin-bottom: 8px;">
       <div style="display: flex; gap: 6px;">
         <button id="btnSaveDeadline" style="flex:1; background:#0078d4; color:#fff; padding:6px; font-size:12px; border-radius:4px; font-weight:600;">Lưu hạn chót</button>
-        <button id="btnClearDeadline" style="background:rgba(232,17,35,0.1); color:#e81123; padding:6px 10px; font-size:12px; border-radius:4px;">Xóa</button>
+        <button id="btnClearDeadline" style="background:rgba(232,17,35,0.1); color:#e81123; padding:6px 10px; font-size:12px; border-radius:4px;">Xóa hạn</button>
       </div>
     </div>
 
@@ -412,6 +438,9 @@
       <div id="unlockError" style="font-size: 11px; color: #e81123; margin-bottom: 8px; display: none;">Mã PIN không chính xác!</div>
       <button id="btnSubmitUnlock" style="background:#0078d4; color:#fff; padding:6px 20px; font-size:12px; border-radius:4px; font-weight:600;">Mở khóa</button>
     </div>
+
+    <!-- Toast Notification -->
+    <div id="noteToast" class="fluent-toast no-drag"></div>
 
   </div>
 

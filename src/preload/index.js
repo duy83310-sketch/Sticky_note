@@ -10,6 +10,7 @@ contextBridge.exposeInMainWorld('api', {
   deleteNote: (id) => ipcRenderer.invoke('delete-note', id),
   closeNoteWindow: (id) => ipcRenderer.invoke('close-note-window', id),
   togglePinNote: (id) => ipcRenderer.invoke('toggle-pin-note', id),
+  toggleUrgentNote: (id) => ipcRenderer.invoke('toggle-urgent-note', id),
 
   // --- Security & Encryption ---
   lockNote: (id, pin) => ipcRenderer.invoke('lock-note', { id, pin }),

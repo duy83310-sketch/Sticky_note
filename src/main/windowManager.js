@@ -162,7 +162,7 @@ class WindowManager {
       frame: false,
       transparent: false,
       backgroundColor: '#fef08a',
-      alwaysOnTop: note.pinned !== false ? settings.alwaysOnTop : false,
+      alwaysOnTop: note.pinned !== false,
       skipTaskbar: false,
       resizable: true,
       icon: appIconPath,
@@ -183,7 +183,7 @@ class WindowManager {
         win.show();
         win.focus();
         win.moveTop();
-        if (note.pinned !== false && settings.alwaysOnTop) {
+        if (note.pinned !== false) {
           win.setAlwaysOnTop(true, 'screen-saver');
         }
       }
