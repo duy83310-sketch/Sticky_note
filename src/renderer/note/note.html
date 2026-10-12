@@ -318,6 +318,17 @@
     <main id="contentScrollArea">
       <input id="noteTitle" type="text" placeholder="Tiêu đề ghi chú…" maxlength="120" spellcheck="false" class="no-drag">
 
+      <!-- Checklist Progress Bar (Thanh màu xanh lá bao trùm theo tỉ lệ tích) -->
+      <div id="checklistProgress" class="progress-container no-drag" style="display: none;">
+        <div class="progress-header">
+          <span id="progressLabelText">Tiến độ công việc</span>
+          <span id="progressTagText" class="progress-tag">0/0 (0%)</span>
+        </div>
+        <div class="progress-track">
+          <div id="progressFillBar" class="progress-fill" style="width: 0%;"></div>
+        </div>
+      </div>
+
       <!-- Checklist View -->
       <div id="checklistView" class="checklist-container no-drag">
         <!-- Dynamically rendered checklist items -->

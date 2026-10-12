@@ -16,6 +16,12 @@ const dlDot = document.getElementById('dlDot');
 const dlTimeText = document.getElementById('dlTimeText');
 const dlBadgeText = document.getElementById('dlBadgeText');
 
+// Progress Bar Elements
+const checklistProgress = document.getElementById('checklistProgress');
+const progressLabelText = document.getElementById('progressLabelText');
+const progressTagText = document.getElementById('progressTagText');
+const progressFillBar = document.getElementById('progressFillBar');
+
 // Flyouts
 const menuFlyout = document.getElementById('menuFlyout');
 const deadlineFlyout = document.getElementById('deadlineFlyout');
@@ -66,7 +72,9 @@ function renderNote() {
     btnAddCheckItem.style.display = 'flex';
     noteEditor.style.display = 'none';
     renderChecklist();
+    updateChecklistProgress();
   } else {
+    if (checklistProgress) checklistProgress.style.display = 'none';
     checklistView.style.display = 'none';
     btnAddCheckItem.style.display = 'none';
     noteEditor.style.display = 'block';
@@ -216,7 +224,40 @@ function setDeadlineTime(dateObj) {
   closeFlyouts();
 }
 
-// ── Checklist Engine ────────────────────────────────────────────────────────
+// ── Checklist Engine & Progress Bar ─────────────────────────────────────────
+
+function updateChecklistProgress() {
+  if (!currentNote || currentNote.type !== 'checklist') {
+    if (checklistProgress) checklistProgress.style.display = 'none';
+    return;
+  }
+  const items = currentNote.checklist || [];
+  if (items.length === 0) {
+    if (checklistProgress) checklistProgress.style.display = 'none';
+    return;
+  }
+
+  if (checklistProgress) checklistProgress.style.display = 'flex';
+  const totalCount = items.length;
+  const doneCount = items.filter(i => i.done).length;
+  const pct = totalCount > 0 ? Math.round((doneCount / totalCount) * 100) : 0;
+
+  if (progressFillBar) {
+    // Màu xanh lá bao trùm theo tỉ lệ tích (1/3 -> 33%, 2/3 -> 67%, 3/3 -> 100%)
+    progressFillBar.style.width = `${pct}%`;
+    progressFillBar.classList.toggle('complete', doneCount === totalCount && totalCount > 0);
+  }
+
+  if (progressTagText) {
+    progressTagText.textContent = `${doneCount}/${totalCount} (${pct}%)`;
+  }
+
+  if (progressLabelText) {
+    progressLabelText.textContent = (doneCount === totalCount && totalCount > 0)
+      ? 'Hoàn thành tất cả! 🎉'
+      : `Tiến độ: ${doneCount}/${totalCount} (${pct}%)`;
+  }
+}
 
 function renderChecklist() {
   checklistView.innerHTML = '';
@@ -226,27 +267,39 @@ function renderChecklist() {
     const row = document.createElement('div');
     row.className = 'check-item';
 
-    const checkbox = document.createElement('input');
-    checkbox.type = 'checkbox';
-    checkbox.className = 'check-box';
-    checkbox.checked = !!item.done;
-    checkbox.addEventListener('change', () => {
-      item.done = checkbox.checked;
-      textInput.classList.toggle('done', item.done);
-      scheduleSave();
-    });
+    // Số thứ tự danh sách (1., 2., 3.)
+    const numberSpan = document.createElement('span');
+    numberSpan.className = 'check-number';
+    numberSpan.textContent = `${index + 1}.`;
+
+    // Ô Checkbox tùy chỉnh dạng Fluent
+    const customCheck = document.createElement('div');
+    customCheck.className = `custom-checkbox ${item.done ? 'checked' : ''}`;
+    customCheck.innerHTML = item.done ? '✓' : '';
+    customCheck.title = item.done ? 'Bỏ chọn' : 'Đánh dấu hoàn thành';
 
     const textInput = document.createElement('input');
     textInput.type = 'text';
     textInput.className = `check-input ${item.done ? 'done' : ''}`;
     textInput.value = item.text || '';
-    textInput.placeholder = 'Công việc…';
+    textInput.placeholder = 'Nội dung công việc…';
+
+    // Toggle hoàn thành khi bấm vào ô checkbox
+    customCheck.addEventListener('click', () => {
+      item.done = !item.done;
+      customCheck.classList.toggle('checked', item.done);
+      customCheck.innerHTML = item.done ? '✓' : '';
+      textInput.classList.toggle('done', item.done);
+      updateChecklistProgress();
+      scheduleSave();
+    });
+
     textInput.addEventListener('input', () => {
       item.text = textInput.value;
       scheduleSave();
     });
 
-    // Nhấn Enter tạo dòng tiếp theo
+    // Nhấn Enter tạo dòng tiếp theo ngay phía dưới
     textInput.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
         e.preventDefault();
@@ -261,14 +314,18 @@ function renderChecklist() {
     btnDel.addEventListener('click', () => {
       items.splice(index, 1);
       renderChecklist();
+      updateChecklistProgress();
       scheduleSave();
     });
 
-    row.appendChild(checkbox);
+    row.appendChild(numberSpan);
+    row.appendChild(customCheck);
     row.appendChild(textInput);
     row.appendChild(btnDel);
     checklistView.appendChild(row);
   });
+
+  updateChecklistProgress();
 }
 
 function insertCheckItem(atIndex) {
@@ -280,6 +337,7 @@ function insertCheckItem(atIndex) {
     currentNote.checklist.push(newItem);
   }
   renderChecklist();
+  updateChecklistProgress();
   scheduleSave();
 
   // Focus vào ô vừa tạo

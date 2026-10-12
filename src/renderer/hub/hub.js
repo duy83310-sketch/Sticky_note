@@ -112,17 +112,53 @@ function renderCards() {
       <span style="opacity: 0.7; font-size: 10px;">${formatTimeShort(note.updatedAt)}</span>
     `;
 
-    // Nội dung tóm tắt
-    let excerpt = '';
+    // Nội dung tóm tắt & Thanh tiến độ xanh lá bao trùm theo tỉ lệ
+    let cardBodyHtml = '';
+
     if (note.locked) {
-      excerpt = '🔒 Nội dung đã được mã hóa bảo mật bằng mã PIN';
+      cardBodyHtml = `<p class="card-excerpt">🔒 Nội dung đã được mã hóa bảo mật bằng mã PIN</p>`;
     } else if (note.type === 'checklist') {
       const items = note.checklist || [];
+      const totalCount = items.length;
       const doneCount = items.filter(i => i.done).length;
-      const firstItems = items.slice(0, 2).map(i => `${i.done ? '✓' : '○'} ${i.text}`).join(' • ');
-      excerpt = `[${doneCount}/${items.length}] ${firstItems || 'Danh sách trống'}`;
+      const pct = totalCount > 0 ? Math.round((doneCount / totalCount) * 100) : 0;
+      const isComplete = doneCount === totalCount && totalCount > 0;
+
+      // 1. Thanh màu xanh lá bao trùm từ trái sang phải theo tỉ lệ tích (1/3 -> 33%, 2/3 -> 67%, 3/3 -> 100%)
+      const progressHtml = `
+        <div class="progress-container" style="margin: 4px 0 6px 0;">
+          <div class="progress-header">
+            <span style="font-size: 10.5px; opacity: 0.85;">${isComplete ? 'Hoàn thành 🎉' : 'Tiến độ'}</span>
+            <span class="progress-tag">${doneCount}/${totalCount} (${pct}%)</span>
+          </div>
+          <div class="progress-track" style="height: 5px;">
+            <div class="progress-fill ${isComplete ? 'complete' : ''}" style="width: ${pct}%;"></div>
+          </div>
+        </div>
+      `;
+
+      // 2. Hiển thị dạng list từng dòng riêng biệt
+      const visibleItems = items.slice(0, 4);
+      const remainingCount = items.length - visibleItems.length;
+
+      const listRowsHtml = visibleItems.map((item, idx) => `
+        <div class="card-checklist-row ${item.done ? 'done' : ''}">
+          <span class="card-check-bullet">${item.done ? '✓' : ''}</span>
+          <span style="flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(item.text || 'Công việc…')}</span>
+        </div>
+      `).join('');
+
+      const moreHtml = remainingCount > 0 ? `<div class="card-checklist-more">+${remainingCount} mục khác…</div>` : '';
+
+      cardBodyHtml = `
+        ${progressHtml}
+        <div class="card-checklist-container">
+          ${listRowsHtml}
+          ${moreHtml}
+        </div>
+      `;
     } else {
-      excerpt = stripHtml(note.content) || 'Chưa có nội dung…';
+      cardBodyHtml = `<p class="card-excerpt">${escapeHtml(stripHtml(note.content) || 'Chưa có nội dung…')}</p>`;
     }
 
     card.innerHTML = `
@@ -130,7 +166,7 @@ function renderCards() {
         <span class="card-title">${escapeHtml(note.title || 'Ghi chú không tên')}</span>
         ${badgeHtml}
       </div>
-      <p class="card-excerpt">${escapeHtml(excerpt)}</p>
+      ${cardBodyHtml}
       <div class="card-footer">
         <span>${formatDateShort(note.updatedAt)}</span>
         <div class="card-actions">

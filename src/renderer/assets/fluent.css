@@ -350,3 +350,232 @@ input, textarea {
   border-color: #0078d4;
   box-shadow: 0 0 0 1px #0078d4;
 }
+
+/* ==========================================================================
+   Checklist Progress Bar & Fluent Task List Engine
+   ========================================================================== */
+
+/* Progress Bar (Thanh màu xanh lá bao trùm theo tỉ lệ tích) */
+.progress-container {
+  margin: 6px 0 10px 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.progress-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  font-weight: 600;
+  color: inherit;
+  opacity: 0.85;
+  margin-bottom: 4px;
+}
+
+.progress-tag {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  padding: 1.5px 6px;
+  border-radius: var(--radius-sm);
+  background: rgba(39, 174, 96, 0.15);
+  color: #0e6231;
+  font-weight: 700;
+}
+body.theme-charcoal .progress-tag, .card-charcoal .progress-tag {
+  background: rgba(46, 204, 113, 0.2);
+  color: #2ecc71;
+}
+
+.progress-track {
+  width: 100%;
+  height: 6px;
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+  position: relative;
+}
+body.theme-charcoal .progress-track, .card-charcoal .progress-track {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.progress-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #107c41 0%, #27ae60 100%);
+  border-radius: var(--radius-pill);
+  transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 0 8px rgba(39, 174, 96, 0.35);
+}
+.progress-fill.complete {
+  background: linear-gradient(90deg, #107c41 0%, #2ecc71 100%);
+  box-shadow: 0 0 12px rgba(46, 204, 113, 0.6);
+}
+
+/* Card Checklist List View in Hub */
+.card-checklist-container {
+  display: flex;
+  flex-direction: column;
+  gap: 4.5px;
+  margin: 6px 0;
+}
+
+.card-checklist-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11.5px;
+  line-height: 1.35;
+}
+.card-checklist-row.done {
+  opacity: 0.5;
+  text-decoration: line-through;
+}
+
+.card-check-bullet {
+  width: 13px;
+  height: 13px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  border-radius: 3px;
+  border: 1.2px solid currentColor;
+  flex-shrink: 0;
+  opacity: 0.75;
+}
+.card-checklist-row.done .card-check-bullet {
+  background: #27ae60;
+  border-color: #27ae60;
+  color: #ffffff;
+  opacity: 1;
+  font-weight: bold;
+}
+
+.card-checklist-more {
+  font-size: 10px;
+  opacity: 0.55;
+  font-style: italic;
+  padding-left: 20px;
+  margin-top: 1px;
+}
+
+/* Note Window Checklist List Rows */
+.checklist-container {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.check-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 8px;
+  border-radius: var(--radius-sm);
+  transition: background 0.15s ease;
+}
+.check-item:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+body.theme-charcoal .check-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.custom-checkbox {
+  width: 17px;
+  height: 17px;
+  border-radius: 4px;
+  border: 1.5px solid rgba(0, 0, 0, 0.35);
+  background: rgba(255, 255, 255, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+body.theme-charcoal .custom-checkbox {
+  border-color: rgba(255, 255, 255, 0.4);
+  background: rgba(0, 0, 0, 0.3);
+}
+.custom-checkbox.checked {
+  background: #27ae60 !important;
+  border-color: #27ae60 !important;
+  color: #ffffff;
+}
+
+.check-input {
+  flex: 1;
+  font-size: 13px;
+  line-height: 1.45;
+  border: none;
+  background: transparent;
+  outline: none;
+  color: inherit;
+  transition: all 0.15s ease;
+}
+.check-input.done {
+  text-decoration: line-through;
+  opacity: 0.55;
+}
+
+.check-number {
+  font-size: 11px;
+  font-family: var(--font-mono);
+  opacity: 0.45;
+  min-width: 14px;
+  text-align: right;
+  user-select: none;
+}
+
+.btn-del-item {
+  opacity: 0;
+  font-size: 12px;
+  color: #888;
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+.check-item:hover .btn-del-item {
+  opacity: 1;
+}
+.btn-del-item:hover {
+  background: rgba(232, 17, 35, 0.15);
+  color: #e81123;
+}
+
+.btn-add-item {
+  margin-top: 8px;
+  font-size: 12.5px;
+  color: inherit;
+  opacity: 0.8;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px dashed rgba(0, 0, 0, 0.25);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  width: 100%;
+  justify-content: flex-start;
+  transition: all 0.15s ease;
+}
+body.theme-charcoal .btn-add-item {
+  border-color: rgba(255, 255, 255, 0.25);
+}
+.btn-add-item:hover {
+  opacity: 1;
+  background: rgba(0, 0, 0, 0.05);
+  border-style: solid;
+}
+body.theme-charcoal .btn-add-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
