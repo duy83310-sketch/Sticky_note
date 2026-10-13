@@ -568,15 +568,27 @@ async function submitUnlock() {
   }
 }
 
-// Lắng nghe sự kiện reload từ Main
+// Lắng nghe sự kiện reload từ Main (Real-time Cloud Sync & Hub updates)
 window.api.onNotesUpdated(async () => {
   const updated = await window.api.getNote(noteId);
   if (updated && !currentNote?.locked) {
+    const isEditing = document.activeElement === noteEditor || document.activeElement === noteTitle;
     currentNote.pinned = updated.pinned;
     currentNote.isUrgent = updated.isUrgent;
     currentNote.deadline = updated.deadline;
-    updatePinButton(currentNote.pinned !== false);
-    renderDeadline();
+    currentNote.color = updated.color;
+    currentNote.type = updated.type;
+
+    if (!isEditing) {
+      currentNote.title = updated.title;
+      currentNote.content = updated.content;
+      currentNote.checklist = updated.checklist;
+      renderNote();
+    } else {
+      updatePinButton(currentNote.pinned !== false);
+      renderDeadline();
+      applyTheme(currentNote.color || 'yellow');
+    }
   }
 });
 

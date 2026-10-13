@@ -33,6 +33,7 @@ const appVersionInfo = document.getElementById('appVersionInfo');
 async function initHub() {
   await loadAndRenderNotes();
   await loadSettings();
+  await loadSyncStatus();
 
   const ver = await window.api.getAppVersion();
   if (ver) {
@@ -474,6 +475,184 @@ window.api.onNotesUpdated(() => {
 
 window.api.onOpenSettings(() => {
   openSettingsModal();
+});
+
+// ── Cloud Sync Modal Controller ─────────────────────────────────────────────
+
+const btnHubSync = document.getElementById('btnHubSync');
+const hubSyncDot = document.getElementById('hubSyncDot');
+const syncModal = document.getElementById('syncModal');
+const btnCloseSync = document.getElementById('btnCloseSync');
+const modalSyncDot = document.getElementById('modalSyncDot');
+const modalSyncStatusText = document.getElementById('modalSyncStatusText');
+const modalUserEmail = document.getElementById('modalUserEmail');
+const modalSyncTime = document.getElementById('modalSyncTime');
+const syncLoggedInView = document.getElementById('syncLoggedInView');
+const syncLoggedOutView = document.getElementById('syncLoggedOutView');
+const btnManualSyncNow = document.getElementById('btnManualSyncNow');
+const btnSyncLogout = document.getElementById('btnSyncLogout');
+const tabSyncLogin = document.getElementById('tabSyncLogin');
+const tabSyncRegister = document.getElementById('tabSyncRegister');
+const inputSyncEmail = document.getElementById('inputSyncEmail');
+const inputSyncPassword = document.getElementById('inputSyncPassword');
+const syncAuthError = document.getElementById('syncAuthError');
+const btnSubmitSyncAuth = document.getElementById('btnSubmitSyncAuth');
+const companionUrlLabel = document.getElementById('companionUrlLabel');
+const btnCopyCompanionUrl = document.getElementById('btnCopyCompanionUrl');
+
+let currentSyncAuthMode = 'login';
+
+async function loadSyncStatus() {
+  try {
+    const status = await window.api.getSyncStatus();
+    updateSyncUI(status);
+  } catch (err) {
+    console.warn('Lỗi đọc trạng thái sync:', err);
+  }
+}
+
+function updateSyncUI(status) {
+  if (!status) return;
+
+  if (status.companionUrl) {
+    companionUrlLabel.textContent = status.companionUrl;
+  }
+
+  if (status.loggedIn && status.user) {
+    hubSyncDot.style.background = '#10b981';
+    hubSyncDot.title = 'Đã kết nối Firebase Cloud';
+    modalSyncDot.style.background = '#10b981';
+    modalSyncStatusText.textContent = 'Đã kết nối Firebase Cloud (Realtime)';
+    modalSyncStatusText.style.color = '#10b981';
+
+    modalUserEmail.style.display = 'block';
+    modalUserEmail.textContent = `Tài khoản: ${status.user.email || 'N/A'}`;
+
+    syncLoggedInView.style.display = 'flex';
+    syncLoggedOutView.style.display = 'none';
+
+    if (status.lastSyncedAt) {
+      const timeStr = new Date(status.lastSyncedAt).toLocaleTimeString('vi-VN');
+      modalSyncTime.textContent = `Lần đồng bộ gần nhất: ${timeStr}`;
+    } else {
+      modalSyncTime.textContent = 'Sẵn sàng đồng bộ 2 chiều tức thì';
+    }
+  } else {
+    hubSyncDot.style.background = '#94a3b8';
+    hubSyncDot.title = 'Chưa đăng nhập đồng bộ Cloud';
+    modalSyncDot.style.background = '#94a3b8';
+    modalSyncStatusText.textContent = 'Chưa đăng nhập đồng bộ Cloud';
+    modalSyncStatusText.style.color = 'rgba(255,255,255,0.7)';
+
+    modalUserEmail.style.display = 'none';
+    modalSyncTime.textContent = 'Đăng nhập để đồng bộ ghi chú với điện thoại';
+
+    syncLoggedInView.style.display = 'none';
+    syncLoggedOutView.style.display = 'flex';
+  }
+}
+
+btnHubSync.addEventListener('click', () => {
+  syncModal.classList.add('active');
+  loadSyncStatus();
+});
+
+btnCloseSync.addEventListener('click', () => {
+  syncModal.classList.remove('active');
+});
+
+syncModal.addEventListener('click', (e) => {
+  if (e.target === syncModal) syncModal.classList.remove('active');
+});
+
+tabSyncLogin.addEventListener('click', () => {
+  currentSyncAuthMode = 'login';
+  tabSyncLogin.className = 'btn-fluent-primary';
+  tabSyncRegister.className = 'btn-fluent-secondary';
+  btnSubmitSyncAuth.textContent = 'Đăng nhập';
+  syncAuthError.style.display = 'none';
+});
+
+tabSyncRegister.addEventListener('click', () => {
+  currentSyncAuthMode = 'register';
+  tabSyncRegister.className = 'btn-fluent-primary';
+  tabSyncLogin.className = 'btn-fluent-secondary';
+  btnSubmitSyncAuth.textContent = 'Tạo tài khoản mới';
+  syncAuthError.style.display = 'none';
+});
+
+btnSubmitSyncAuth.addEventListener('click', async () => {
+  const email = inputSyncEmail.value.trim();
+  const password = inputSyncPassword.value.trim();
+  syncAuthError.style.display = 'none';
+
+  if (!email || !password) {
+    syncAuthError.style.display = 'block';
+    syncAuthError.textContent = 'Vui lòng điền cả email và mật khẩu!';
+    return;
+  }
+
+  btnSubmitSyncAuth.disabled = true;
+  btnSubmitSyncAuth.textContent = 'Đang kết nối...';
+
+  try {
+    let res;
+    if (currentSyncAuthMode === 'login') {
+      res = await window.api.syncLogin(email, password, true);
+    } else {
+      res = await window.api.syncRegister(email, password);
+    }
+
+    if (res.success) {
+      await loadSyncStatus();
+      inputSyncPassword.value = '';
+    } else {
+      syncAuthError.style.display = 'block';
+      syncAuthError.textContent = res.error || 'Thao tác không thành công';
+    }
+  } catch (err) {
+    syncAuthError.style.display = 'block';
+    syncAuthError.textContent = err.message || 'Lỗi hệ thống';
+  } finally {
+    btnSubmitSyncAuth.disabled = false;
+    btnSubmitSyncAuth.textContent = currentSyncAuthMode === 'login' ? 'Đăng nhập' : 'Tạo tài khoản mới';
+  }
+});
+
+btnSyncLogout.addEventListener('click', async () => {
+  if (confirm('Bạn có muốn đăng xuất khỏi tài khoản đồng bộ không?')) {
+    await window.api.syncLogout();
+    await loadSyncStatus();
+  }
+});
+
+btnManualSyncNow.addEventListener('click', async () => {
+  btnManualSyncNow.disabled = true;
+  btnManualSyncNow.textContent = 'Đang đồng bộ...';
+  try {
+    const res = await window.api.syncNow();
+    if (res.success) {
+      await loadAndRenderNotes();
+      await loadSyncStatus();
+    } else {
+      alert('Lỗi: ' + res.error);
+    }
+  } finally {
+    btnManualSyncNow.disabled = false;
+    btnManualSyncNow.textContent = 'Đồng bộ 2 chiều ngay';
+  }
+});
+
+btnCopyCompanionUrl.addEventListener('click', () => {
+  const url = companionUrlLabel.textContent;
+  navigator.clipboard.writeText(url).then(() => {
+    btnCopyCompanionUrl.textContent = '✓ Đã chép';
+    setTimeout(() => { btnCopyCompanionUrl.textContent = 'Sao chép'; }, 2000);
+  });
+});
+
+window.api.onSyncStatusChanged((status) => {
+  updateSyncUI(status);
 });
 
 // Khởi chạy

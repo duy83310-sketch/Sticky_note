@@ -5,6 +5,8 @@ const security = require('./security');
 const updater = require('./updater');
 const WindowManager = require('./windowManager');
 const { setupTray } = require('./trayManager');
+const SyncManager = require('./syncManager');
+const LocalServer = require('./localServer');
 
 // Vô hiệu hóa GPU và sandbox để đảm bảo 100% ổn định trên Windows
 app.disableHardwareAcceleration();
@@ -21,6 +23,8 @@ if (!gotTheLock) {
 }
 
 const windowManager = new WindowManager(store);
+const syncManager = new SyncManager(store, windowManager);
+const localServer = new LocalServer(3000);
 let trayController = null;
 
 // Xử lý khi user mở app lần 2
@@ -52,6 +56,9 @@ ipcMain.handle('save-note', (_e, noteData) => {
   if (!noteData || !noteData.id) return false;
   const updated = store.updateNote(noteData.id, noteData);
   windowManager.notifyNotesUpdated();
+  if (updated) {
+    syncManager.onLocalNoteSaved(updated);
+  }
   return !!updated;
 });
 
@@ -59,6 +66,7 @@ ipcMain.handle('new-note', (_e, partial) => {
   const newNote = store.createNote(partial || {});
   windowManager.createNoteWindow(newNote.id);
   windowManager.notifyNotesUpdated();
+  syncManager.onLocalNoteSaved(newNote);
   return newNote;
 });
 
@@ -70,6 +78,9 @@ ipcMain.handle('delete-note', (_e, id) => {
   windowManager.closeNoteWindow(id);
   const ok = store.deleteNote(id);
   windowManager.notifyNotesUpdated();
+  if (ok) {
+    syncManager.onLocalNoteDeleted(id);
+  }
   return ok;
 });
 
@@ -96,6 +107,8 @@ ipcMain.handle('toggle-pin-note', (_e, id) => {
     }
   }
   windowManager.notifyNotesUpdated();
+  const updated = store.getNote(id);
+  if (updated) syncManager.onLocalNoteSaved(updated);
   return newPinned;
 });
 
@@ -110,6 +123,8 @@ ipcMain.handle('toggle-urgent-note', (_e, id) => {
   }
   store.updateNote(id, updates);
   windowManager.notifyNotesUpdated();
+  const updated = store.getNote(id);
+  if (updated) syncManager.onLocalNoteSaved(updated);
   return newUrgent;
 });
 
@@ -252,6 +267,34 @@ ipcMain.handle('check-for-updates', async () => {
   return await updater.checkForUpdates();
 });
 
+// ── Cloud Sync Handlers (Firebase & Mobile PWA Companion) ─────────────────────
+ipcMain.handle('sync-get-status', () => {
+  return {
+    ...syncManager.getStatus(),
+    companionUrl: localServer.getUrl(),
+  };
+});
+
+ipcMain.handle('sync-login', async (_e, { email, password, remember }) => {
+  return await syncManager.login(email, password, remember);
+});
+
+ipcMain.handle('sync-register', async (_e, { email, password }) => {
+  return await syncManager.register(email, password);
+});
+
+ipcMain.handle('sync-logout', async () => {
+  return await syncManager.logout();
+});
+
+ipcMain.handle('sync-now', async () => {
+  return await syncManager.syncNow();
+});
+
+ipcMain.handle('sync-get-companion-url', () => {
+  return { url: localServer.getUrl() };
+});
+
 // ── App Lifecycle ─────────────────────────────────────────────────────────────
 
 app.whenReady().then(() => {
@@ -292,6 +335,12 @@ app.whenReady().then(() => {
   } catch(err) {
     console.error('createNoteWindow error:', err.message);
   }
+  // Khởi động Local Server cho Mobile PWA Companion
+  try {
+    localServer.start();
+  } catch(err) {
+    console.warn('[Main] LocalServer start error:', err.message);
+  }
 });
 
 app.on('window-all-closed', (e) => {
@@ -304,4 +353,7 @@ app.on('window-all-closed', (e) => {
 
 app.on('before-quit', () => {
   app.isQuitting = true;
+  try {
+    localServer.stop();
+  } catch(_) {}
 });

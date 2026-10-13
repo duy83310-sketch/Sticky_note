@@ -432,6 +432,12 @@
       </div>
 
       <div class="hub-actions no-drag">
+        <button id="btnHubSync" class="hub-btn-icon" title="Đồng bộ Cloud & Điện thoại" style="position: relative;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path>
+          </svg>
+          <span id="hubSyncDot" style="position: absolute; top: 4px; right: 4px; width: 6px; height: 6px; border-radius: 50%; background: #94a3b8;"></span>
+        </button>
         <button id="btnHubSettings" class="hub-btn-icon" title="Cài đặt & Bảo mật">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="12" cy="12" r="3"></circle>
@@ -590,6 +596,103 @@
           </button>
         </section>
 
+      </div>
+    </div>
+
+    <!-- ── Cloud Sync Modal ────────────────────────────────────────────────── -->
+    <div id="syncModal" class="settings-modal-overlay">
+      <div class="settings-window">
+        <div class="settings-header">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 16px;">☁️</span>
+            <span style="font-size: 13px; font-weight: 600;">Đồng bộ Cloud & Điện thoại</span>
+          </div>
+          <button id="btnCloseSync" class="hub-btn-icon" title="Đóng">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+
+        <div class="settings-body">
+          
+          <!-- Trạng thái kết nối -->
+          <section class="setting-section">
+            <div class="setting-section-title">
+              <span>⚡</span> Trạng thái kết nối Firebase
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+              <span id="modalSyncDot" style="width: 10px; height: 10px; border-radius: 50%; background: #94a3b8; display: inline-block;"></span>
+              <span id="modalSyncStatusText" style="font-size: 13px; font-weight: 600;">Chưa đăng nhập</span>
+            </div>
+            <div id="modalUserEmail" style="font-size: 12px; color: rgba(255,255,255,0.7); margin-bottom: 6px; display: none;"></div>
+            <div id="modalSyncTime" style="font-size: 11px; color: rgba(255,255,255,0.45);"></div>
+          </section>
+
+          <!-- Khi đã đăng nhập -->
+          <div id="syncLoggedInView" style="display: none; flex-direction: column; gap: 12px;">
+            <section class="setting-section">
+              <div class="setting-section-title">
+                <span>🔄</span> Đồng bộ thời gian thực
+              </div>
+              <p class="setting-desc" style="margin-bottom: 12px;">
+                Mọi ghi chú trên máy tính sẽ tự động cập nhật ngay trên điện thoại và ngược lại khi có thay đổi.
+              </p>
+              <div style="display: flex; gap: 8px;">
+                <button id="btnManualSyncNow" class="btn-fluent-primary" style="flex: 1;">
+                  Đồng bộ 2 chiều ngay
+                </button>
+                <button id="btnSyncLogout" class="btn-fluent-secondary">
+                  Đăng xuất
+                </button>
+              </div>
+            </section>
+          </div>
+
+          <!-- Khi chưa đăng nhập -->
+          <div id="syncLoggedOutView" style="display: flex; flex-direction: column; gap: 12px;">
+            <section class="setting-section">
+              <div class="setting-section-title">
+                <span>🔐</span> Tài khoản đồng bộ
+              </div>
+              <p class="setting-desc" style="margin-bottom: 12px;">
+                Đăng nhập tài khoản Firebase để đồng bộ ghi chú với ứng dụng web trên điện thoại của bạn.
+              </p>
+
+              <div style="display: flex; gap: 6px; margin-bottom: 12px;">
+                <button id="tabSyncLogin" class="btn-fluent-primary" style="flex: 1; padding: 5px;">Đăng nhập</button>
+                <button id="tabSyncRegister" class="btn-fluent-secondary" style="flex: 1; padding: 5px;">Đăng ký</button>
+              </div>
+
+              <div style="display: flex; flex-direction: column; gap: 8px;">
+                <input id="inputSyncEmail" type="email" placeholder="Địa chỉ Email..." style="width: 100%; padding: 8px 10px; border-radius: var(--radius-sm); background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); color: #fff; font-size: 12.5px; outline: none;">
+                <input id="inputSyncPassword" type="password" placeholder="Mật khẩu (tối thiểu 6 ký tự)..." style="width: 100%; padding: 8px 10px; border-radius: var(--radius-sm); background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); color: #fff; font-size: 12.5px; outline: none;">
+              </div>
+
+              <div id="syncAuthError" style="font-size: 11.5px; color: #ef4444; margin-top: 8px; display: none;"></div>
+
+              <button id="btnSubmitSyncAuth" class="btn-fluent-primary" style="margin-top: 10px; width: 100%;">
+                Đăng nhập
+              </button>
+            </section>
+          </div>
+
+          <!-- Kết nối Điện thoại (Mobile Companion) -->
+          <section class="setting-section">
+            <div class="setting-section-title">
+              <span>📱</span> Mở trên Điện thoại (Mobile PWA)
+            </div>
+            <p class="setting-desc" style="margin-bottom: 8px;">
+              Mở link sau trên trình duyệt điện thoại (khi cùng mạng WiFi) hoặc cài PWA vào màn hình chính:
+            </p>
+            <div style="display: flex; align-items: center; gap: 6px; background: rgba(0,0,0,0.25); padding: 8px 10px; border-radius: var(--radius-sm); border: 1px solid rgba(255,255,255,0.08);">
+              <span id="companionUrlLabel" style="font-size: 12px; color: #60a5fa; flex: 1; font-family: var(--font-mono); word-break: break-all;">http://localhost:3000</span>
+              <button id="btnCopyCompanionUrl" class="btn-fluent-secondary" style="padding: 4px 8px; font-size: 11px;">Sao chép</button>
+            </div>
+          </section>
+
+        </div>
       </div>
     </div>
 

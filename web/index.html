@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Sticky Notes Sync - Mobile Companion</title>
+  <meta name="description" content="Đồng bộ ghi chú tức thì giữa Máy tính Windows và Điện thoại di động">
+  <meta name="theme-color" content="#1e1b4b">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" href="./icon-192.png">
+  <link rel="stylesheet" href="./style.css">
+  
+  <!-- Firebase SDKs (Compat version for zero-bundler browser compatibility) -->
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
+</head>
+<body>
+
+  <!-- App Header -->
+  <header class="app-header">
+    <div class="header-top">
+      <div class="brand">
+        <div class="brand-icon">📝</div>
+        <h1>Sticky Notes</h1>
+      </div>
+      <div class="header-actions">
+        <div class="sync-pill" id="syncPill" title="Nhấn để xem trạng thái đồng bộ">
+          <div class="sync-dot" id="syncDot"></div>
+          <span id="syncText">Cloud Sync</span>
+        </div>
+        <button class="btn-icon" id="btnAuthModal" aria-label="Tài khoản">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Search Input -->
+    <div class="search-box">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"></circle>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+      </svg>
+      <input type="text" class="search-input" id="searchInput" placeholder="Tìm kiếm ghi chú, checklist...">
+    </div>
+  </header>
+
+  <!-- Filter Chips -->
+  <div class="filter-scroll">
+    <button class="filter-chip active" data-filter="all">Tất cả</button>
+    <button class="filter-chip" data-filter="urgent">⚡ Khẩn cấp</button>
+    <button class="filter-chip" data-filter="deadline">⏰ Hạn chót</button>
+    <button class="filter-chip" data-filter="checklist">☑️ Checklist</button>
+    <button class="filter-chip" data-filter="pinned">📌 Đã ghim</button>
+  </div>
+
+  <!-- Notes List Container -->
+  <main class="notes-container" id="notesContainer">
+    <!-- Render dynamic notes -->
+  </main>
+
+  <!-- Floating Action Button (+) -->
+  <button class="fab" id="btnFabNew" aria-label="Tạo ghi chú mới">+</button>
+
+  <!-- Note Editor Modal -->
+  <div class="modal-overlay" id="noteModal">
+    <div class="modal-sheet">
+      <div class="modal-sheet-header">
+        <h2 id="modalTitle">Ghi chú mới</h2>
+        <button class="btn-icon" id="btnCloseNoteModal">✕</button>
+      </div>
+      <div class="modal-sheet-body">
+        
+        <!-- Title Input -->
+        <div class="form-group">
+          <label class="form-label" for="editTitle">Tiêu đề</label>
+          <input type="text" class="form-input" id="editTitle" placeholder="Tiêu đề ghi chú...">
+        </div>
+
+        <!-- Mode Switch (Text vs Checklist) -->
+        <div class="form-group">
+          <label class="form-label">Dạng nội dung</label>
+          <div style="display: flex; gap: 8px;">
+            <button type="button" class="filter-chip active" id="btnModeText" style="flex:1;">📝 Văn bản</button>
+            <button type="button" class="filter-chip" id="btnModeChecklist" style="flex:1;">☑️ Checklist</button>
+          </div>
+        </div>
+
+        <!-- Text Editor Content -->
+        <div class="form-group" id="groupTextContent">
+          <label class="form-label" for="editContent">Nội dung</label>
+          <textarea class="form-textarea" id="editContent" placeholder="Nhập nội dung ghi chú..."></textarea>
+        </div>
+
+        <!-- Checklist Builder Content -->
+        <div class="form-group" id="groupChecklistContent" style="display: none;">
+          <label class="form-label">Danh sách công việc</label>
+          <div class="builder-list" id="builderList">
+            <!-- Dynamic checklist builder items -->
+          </div>
+          <button type="button" class="btn-add-item" id="btnAddCheckItem">+ Thêm mục mới</button>
+        </div>
+
+        <!-- Color Palette Picker -->
+        <div class="form-group">
+          <label class="form-label">Màu sắc</label>
+          <div class="color-picker" id="colorPicker">
+            <div class="color-option active" data-color="yellow" style="background: #fff785;" title="Vàng"></div>
+            <div class="color-option" data-color="blue" style="background: #d8f3fd;" title="Xanh biển"></div>
+            <div class="color-option" data-color="green" style="background: #e2f9d2;" title="Xanh lá"></div>
+            <div class="color-option" data-color="pink" style="background: #fde2e4;" title="Hồng"></div>
+            <div class="color-option" data-color="purple" style="background: #eeddfb;" title="Tím"></div>
+            <div class="color-option" data-color="charcoal" style="background: #2b2d42;" title="Tối"></div>
+          </div>
+        </div>
+
+        <!-- Urgent Toggle -->
+        <div class="toggle-row">
+          <div>
+            <div style="font-size: 14px; font-weight: 600;">⚡ Khẩn cấp</div>
+            <div style="font-size: 12px; color: var(--text-muted);">Ưu tiên cao nhất, báo động thị giác</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="toggleUrgent">
+            <span class="toggle-slider urgent"></span>
+          </label>
+        </div>
+
+        <!-- Deadline Picker -->
+        <div class="form-group">
+          <label class="form-label" for="editDeadline">Hạn chót</label>
+          <input type="datetime-local" class="form-input" id="editDeadline">
+        </div>
+
+        <!-- Save Button -->
+        <button type="button" class="btn-primary" id="btnSaveNote">Lưu & Đồng bộ Cloud</button>
+
+        <!-- Delete Button (if editing) -->
+        <button type="button" class="btn-danger" id="btnDeleteNote" style="display: none;">Xóa ghi chú này</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cloud Sync & Account Modal -->
+  <div class="modal-overlay" id="authModal">
+    <div class="modal-sheet">
+      <div class="modal-sheet-header">
+        <h2>Đồng bộ Firebase Cloud ☁️</h2>
+        <button class="btn-icon" id="btnCloseAuthModal">✕</button>
+      </div>
+      <div class="modal-sheet-body">
+        
+        <!-- When Logged In -->
+        <div id="loggedInView" style="display: none; flex-direction: column; gap: 14px;">
+          <div style="text-align: center; padding: 10px 0;">
+            <div style="font-size: 36px; margin-bottom: 6px;">🟢</div>
+            <h3 style="font-size: 16px;">Đang kết nối Cloud</h3>
+            <p id="userEmailLabel" style="font-size: 13.5px; color: var(--text-muted); margin-top: 4px;"></p>
+          </div>
+          
+          <div style="background: rgba(255,255,255,0.04); border: 1px solid var(--border-glass); border-radius: var(--radius-md); padding: 12px; font-size: 13px; line-height: 1.5;">
+            ✨ Mọi thay đổi ghi chú trên điện thoại sẽ tự động xuất hiện trên máy tính ngay lập tức và ngược lại.
+          </div>
+
+          <button type="button" class="btn-primary" id="btnManualSync">🔄 Đồng bộ ngay</button>
+          <button type="button" class="btn-danger" id="btnLogout">Đăng xuất</button>
+        </div>
+
+        <!-- When Not Logged In -->
+        <div id="loggedOutView" style="display: flex; flex-direction: column; gap: 14px;">
+          <p style="font-size: 13.5px; color: var(--text-muted); line-height: 1.5;">
+            Đăng nhập cùng tài khoản với máy tính để ghi chú tự động đồng bộ 2 chiều qua Firebase Realtime Database.
+          </p>
+
+          <div style="display: flex; gap: 8px;">
+            <button type="button" class="filter-chip active" id="tabLogin" style="flex: 1;">Đăng nhập</button>
+            <button type="button" class="filter-chip" id="tabRegister" style="flex: 1;">Đăng ký</button>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="authEmail">Email</label>
+            <input type="email" class="form-input" id="authEmail" placeholder="vidu@gmail.com">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="authPassword">Mật khẩu</label>
+            <input type="password" class="form-input" id="authPassword" placeholder="Tối thiểu 6 ký tự">
+          </div>
+
+          <button type="button" class="btn-primary" id="btnSubmitAuth">Đăng nhập</button>
+          
+          <div id="authErrorMsg" style="font-size: 13px; color: #ef4444; text-align: center; display: none;"></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div class="toast" id="toast">Đã lưu và đồng bộ</div>
+
+  <!-- App Script -->
+  <script src="./app.js"></script>
+</body>
+</html>

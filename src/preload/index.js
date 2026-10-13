@@ -36,6 +36,19 @@ contextBridge.exposeInMainWorld('api', {
   getAppVersion: () => ipcRenderer.invoke('get-app-version'),
   checkForUpdates: () => ipcRenderer.invoke('check-for-updates'),
 
+  // --- Cloud Sync (Firebase & Mobile Companion) ---
+  getSyncStatus: () => ipcRenderer.invoke('sync-get-status'),
+  syncLogin: (email, password, remember) => ipcRenderer.invoke('sync-login', { email, password, remember }),
+  syncRegister: (email, password) => ipcRenderer.invoke('sync-register', { email, password }),
+  syncLogout: () => ipcRenderer.invoke('sync-logout'),
+  syncNow: () => ipcRenderer.invoke('sync-now'),
+  getCompanionUrl: () => ipcRenderer.invoke('sync-get-companion-url'),
+  onSyncStatusChanged: (cb) => {
+    const handler = (_e, data) => cb(data);
+    ipcRenderer.on('sync-status-changed', handler);
+    return () => ipcRenderer.removeListener('sync-status-changed', handler);
+  },
+
   // --- Events ---
   onNotesUpdated: (cb) => {
     const handler = () => cb();

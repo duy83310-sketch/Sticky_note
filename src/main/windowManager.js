@@ -244,6 +244,12 @@ class WindowManager {
     }
   }
 
+  sendToHub(channel, ...args) {
+    if (hubWindow && !hubWindow.isDestroyed()) {
+      hubWindow.webContents.send(channel, ...args);
+    }
+  }
+
   notifyNotesUpdated() {
     this.sendToHub('notes-updated');
     for (const win of noteWindows.values()) {
