@@ -55,6 +55,13 @@ function setupTray({ windowManager, store, updater }) {
       },
       { type: 'separator' },
       {
+        label: '☁️ Đồng bộ Cloud & Điện thoại',
+        click: () => {
+          windowManager.showHub();
+          windowManager.openHubSync();
+        },
+      },
+      {
         label: '⚙️ Cài đặt & Bảo mật',
         click: () => {
           windowManager.showHub();

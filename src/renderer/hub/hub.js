@@ -325,12 +325,17 @@ btnHubSettings.addEventListener('click', () => {
 });
 
 btnCloseSettings.addEventListener('click', () => {
-  settingsModal.style.display = 'none';
+  closeSettingsModal();
 });
 
 function openSettingsModal() {
+  if (typeof closeSyncModal === 'function') closeSyncModal();
   settingsModal.style.display = 'flex';
   loadSettings();
+}
+
+function closeSettingsModal() {
+  settingsModal.style.display = 'none';
 }
 
 // ── Cài đặt & Quản lý ứng dụng ──────────────────────────────────────────────
@@ -477,6 +482,12 @@ window.api.onOpenSettings(() => {
   openSettingsModal();
 });
 
+if (window.api.onOpenSync) {
+  window.api.onOpenSync(() => {
+    openSyncModal();
+  });
+}
+
 // ── Cloud Sync Modal Controller ─────────────────────────────────────────────
 
 const btnHubSync = document.getElementById('btnHubSync');
@@ -552,17 +563,40 @@ function updateSyncUI(status) {
   }
 }
 
-btnHubSync.addEventListener('click', () => {
+function openSyncModal() {
+  if (typeof closeSettingsModal === 'function') closeSettingsModal();
+  syncModal.style.display = 'flex';
   syncModal.classList.add('active');
   loadSyncStatus();
+}
+
+function closeSyncModal() {
+  syncModal.style.display = 'none';
+  syncModal.classList.remove('active');
+}
+
+btnHubSync.addEventListener('click', (e) => {
+  e.stopPropagation();
+  openSyncModal();
 });
 
-btnCloseSync.addEventListener('click', () => {
-  syncModal.classList.remove('active');
+btnCloseSync.addEventListener('click', (e) => {
+  e.stopPropagation();
+  closeSyncModal();
 });
 
 syncModal.addEventListener('click', (e) => {
-  if (e.target === syncModal) syncModal.classList.remove('active');
+  if (e.target === syncModal) {
+    closeSyncModal();
+  }
+});
+
+// Phím Escape đóng tất cả modal mở
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    closeSyncModal();
+    if (typeof closeSettingsModal === 'function') closeSettingsModal();
+  }
 });
 
 tabSyncLogin.addEventListener('click', () => {

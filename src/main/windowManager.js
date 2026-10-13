@@ -108,6 +108,11 @@ class WindowManager {
     this.sendToHub('open-settings');
   }
 
+  openHubSync() {
+    this.showHub();
+    this.sendToHub('open-sync');
+  }
+
   sendToHub(channel, data) {
     if (hubWindow && !hubWindow.isDestroyed()) {
       hubWindow.webContents.send(channel, data);

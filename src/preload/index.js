@@ -60,6 +60,11 @@ contextBridge.exposeInMainWorld('api', {
     ipcRenderer.on('open-settings', handler);
     return () => ipcRenderer.removeListener('open-settings', handler);
   },
+  onOpenSync: (cb) => {
+    const handler = () => cb();
+    ipcRenderer.on('open-sync', handler);
+    return () => ipcRenderer.removeListener('open-sync', handler);
+  },
   onUpdateStatus: (cb) => {
     const handler = (_e, data) => cb(data);
     ipcRenderer.on('update-status', handler);

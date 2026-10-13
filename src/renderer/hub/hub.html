@@ -19,6 +19,7 @@
       border-radius: var(--radius-md);
       overflow: hidden;
       box-shadow: var(--shadow-window);
+      position: relative;
     }
 
     /* Hub Header */
@@ -282,16 +283,30 @@
       flex-shrink: 0;
     }
 
-    /* Settings Modal Overlay */
-    #settingsModal {
+    /* Settings & Cloud Sync Modals */
+    #settingsModal,
+    #syncModal,
+    .settings-modal-overlay {
       position: absolute;
       inset: 0;
-      background: rgba(15, 15, 25, 0.94);
+      background: rgba(15, 15, 25, 0.96);
       backdrop-filter: blur(20px);
       z-index: 100;
       display: none;
       flex-direction: column;
       animation: modalFadeIn 0.2s ease;
+    }
+
+    #syncModal.active {
+      display: flex;
+    }
+
+    .settings-window {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      width: 100%;
+      overflow: hidden;
     }
 
     @keyframes modalFadeIn {
@@ -306,6 +321,7 @@
       align-items: center;
       justify-content: space-between;
       border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      flex-shrink: 0;
     }
 
     .settings-body {
@@ -502,8 +518,8 @@
           <span style="font-size: 15px;">⚙️</span>
           <span style="font-size: 13.5px; font-weight: 700; color: #ffffff;">Cài đặt & Quản lý ứng dụng</span>
         </div>
-        <button id="btnCloseSettings" class="hub-btn-icon" title="Đóng cài đặt">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3">
+        <button id="btnCloseSettings" class="hub-btn-icon hub-btn-close" title="Đóng cài đặt">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" style="pointer-events: none;">
             <line x1="18" y1="6" x2="6" y2="18"></line>
             <line x1="6" y1="6" x2="18" y2="18"></line>
           </svg>
@@ -600,22 +616,22 @@
     </div>
 
     <!-- ── Cloud Sync Modal ────────────────────────────────────────────────── -->
-    <div id="syncModal" class="settings-modal-overlay">
+    <div id="syncModal" class="settings-modal-overlay no-drag">
       <div class="settings-window">
-        <div class="settings-header">
+        <header class="settings-header">
           <div style="display: flex; align-items: center; gap: 8px;">
             <span style="font-size: 16px;">☁️</span>
-            <span style="font-size: 13px; font-weight: 600;">Đồng bộ Cloud & Điện thoại</span>
+            <span style="font-size: 13px; font-weight: 600; color: #ffffff;">Đồng bộ Cloud & Điện thoại</span>
           </div>
-          <button id="btnCloseSync" class="hub-btn-icon" title="Đóng">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3">
+          <button id="btnCloseSync" class="hub-btn-icon hub-btn-close" title="Đóng">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" style="pointer-events: none;">
               <line x1="18" y1="6" x2="6" y2="18"></line>
               <line x1="6" y1="6" x2="18" y2="18"></line>
             </svg>
           </button>
-        </div>
+        </header>
 
-        <div class="settings-body">
+        <div class="settings-body dark-scroll">
           
           <!-- Trạng thái kết nối -->
           <section class="setting-section">
